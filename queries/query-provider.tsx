@@ -1,6 +1,5 @@
 "use client"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { Check, X } from "lucide-react"
 import { ReactNode, useState } from "react"
 import { Toaster } from "react-hot-toast"
 
@@ -16,7 +15,7 @@ export default function Providers({ children }: { children: ReactNode }) {
         toastOptions={{
           className: ' bg-red-500',
           success:{
-            icon: <Check size={15} className=" text-green-500"/>,
+            icon: '✓',
             style: {
               padding: '10px',
               color: 'white',
@@ -27,7 +26,7 @@ export default function Providers({ children }: { children: ReactNode }) {
             }
           },
            error:{
-            icon: <X size={15} className=" text-red-600"/>,
+            icon: '✕',
             style: {
               padding: '10px',
               color: 'white',

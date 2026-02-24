@@ -1,24 +1,19 @@
-'use client'
+'use client';
 
-import { Moon, Sun } from 'lucide-react'
-import { useThemeStore } from '@/store/theme-store'
-import { Button } from '@/components/ui/button'
+import { moon, sunny } from 'ionicons/icons';
+import { useThemeStore } from '@/store/theme-store';
+import { IonButton, IonIcon } from '@ionic/react';
 
-export function ThemeToggle() {
-  const { isDarkMode, toggleDarkMode } = useThemeStore()
+export default function ThemeToggle() {
+  const { isDarkMode, toggleDarkMode } = useThemeStore();
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
+    <IonButton
+      fill="clear"
       onClick={toggleDarkMode}
       aria-label="Toggle theme"
     >
-      {isDarkMode ? (
-        <Sun className="h-5 w-5" />
-      ) : (
-        <Moon className="h-5 w-5" />
-      )}
-    </Button>
-  )
+      <IonIcon icon={isDarkMode ? sunny : moon} />
+    </IonButton>
+  );
 }
