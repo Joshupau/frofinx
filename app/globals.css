@@ -145,6 +145,25 @@ ion-toolbar {
   --border-color: hsl(var(--border));
 }
 
+/* Ensure Ionic surfaces inherit Tailwind tokens */
+ion-app,
+ion-page,
+ion-content {
+  background: var(--ion-background-color, hsl(var(--background)));
+  color: var(--ion-text-color, hsl(var(--foreground)));
+  font-family: var(--font-geist-sans, ui-sans-serif), system-ui, -apple-system, sans-serif;
+}
+
+ion-button,
+ion-input,
+ion-item,
+ion-label,
+ion-title,
+ion-card,
+ion-chip {
+  font-family: inherit;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -1,175 +1,184 @@
-'use client';
+"use client"
 
-import { useHistory, useLocation } from 'react-router-dom';
-import { notifications, chevronDown, home, logOut, menu, person, settings, trendingUp, wallet, search } from 'ionicons/icons';
-import { useState } from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useThemeStore } from '@/store/theme-store';
+import { useState } from 'react'
+import { useHistory, useLocation } from 'react-router-dom'
 import {
-  IonHeader,
-  IonToolbar,
-  IonButtons,
-  IonButton,
-  IonIcon,
-  IonSearchbar,
-  IonPopover,
-  IonList,
-  IonItem,
-  IonLabel,
-  IonBadge,
-  IonMenu,
-  IonContent,
-  IonMenuToggle,
-  IonAvatar,
-} from '@ionic/react';
-import ThemeToggle from './theme-toggle';
+  Moon,
+  Sun,
+  Search,
+  Bell,
+  User,
+  LogOut,
+  Settings as SettingsIcon,
+  Wallet,
+  CreditCard,
+  TrendingUp,
+  PieChart,
+  Tag,
+  Menu,
+  X,
+  Home,
+} from 'lucide-react'
+import { useThemeStore } from '@/store/theme-store'
 
-export default function Navbar() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showProfilePopover, setShowProfilePopover] = useState(false);
-  const isMobile = useIsMobile();
-  const { isDarkMode } = useThemeStore();
-  const history = useHistory();
-  const location = useLocation();
+const navItems = [
+  { label: 'DASHBOARD', href: '/dashboard', icon: <Home className="w-4 h-4" /> },
+  { label: 'WALLETS', href: '/wallets', icon: <Wallet className="w-4 h-4" /> },
+  { label: 'TRANSACTIONS', href: '/transactions', icon: <TrendingUp className="w-4 h-4" /> },
+  { label: 'BILLS', href: '/bills', icon: <CreditCard className="w-4 h-4" /> },
+  { label: 'BUDGETS', href: '/budgets', icon: <PieChart className="w-4 h-4" /> },
+  { label: 'CATEGORIES', href: '/categories', icon: <Tag className="w-4 h-4" /> },
+  { label: 'SETTINGS', href: '/settings', icon: <SettingsIcon className="w-4 h-4" /> },
+]
 
-  const handleSignOut = () => {
-    history.push('/signin');
-  };
+export default function DNavbar() {
+  const history = useHistory()
+  const location = useLocation()
+  const { isDarkMode, toggleDarkMode } = useThemeStore()
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
+
+  const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/')
+
+  const go = (href: string) => {
+    history.push(href)
+    setShowMobileMenu(false)
+  }
 
   return (
-    <>
-      {/* Mobile Menu */}
-      <IonMenu contentId="main-content" type="overlay">
-        <IonContent>
-          <IonList>
-            <IonMenuToggle>
-              <IonItem button onClick={() => history.push('/dashboard')}>
-                <IonIcon slot="start" icon={home} />
-                <IonLabel>Dashboard</IonLabel>
-              </IonItem>
-            </IonMenuToggle>
-            <IonMenuToggle>
-              <IonItem button onClick={() => history.push('/dashboard/transactions')}>
-                <IonIcon slot="start" icon={trendingUp} />
-                <IonLabel>Transactions</IonLabel>
-              </IonItem>
-            </IonMenuToggle>
-            <IonMenuToggle>
-              <IonItem button onClick={() => history.push('/dashboard/analytics')}>
-                <IonIcon slot="start" icon={trendingUp} />
-                <IonLabel>Analytics</IonLabel>
-              </IonItem>
-            </IonMenuToggle>
-            <IonItem>
-              <IonSearchbar placeholder="Search..." />
-            </IonItem>
-          </IonList>
-        </IonContent>
-      </IonMenu>
-
-      {/* Navbar Header */}
-      <IonHeader className="ion-no-border">
-        <IonToolbar className={isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'}>
-          {/* Left: Logo and Navigation */}
-          <IonButtons slot="start">
-            {isMobile && (
-              <IonButton onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-                <IonIcon icon={menu} />
-              </IonButton>
-            )}
-            
-            <div className="flex items-center gap-2 ml-2">
-              <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
-                <IonIcon icon={wallet} className="text-white" />
-              </div>
-              <span className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>FroFinX</span>
+    <header className="sticky top-0 z-50 bg-gradient-to-b from-background via-background/95 to-background/85 backdrop-blur-sm border-b border-border shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-3">
+          {/* Logo / brand */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              className="lg:hidden p-2 rounded-md hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+              aria-label="Toggle menu"
+              onClick={() => setShowMobileMenu((v) => !v)}
+            >
+              {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+            <div className="w-10 h-10 rounded-lg overflow-hidden bg-card flex items-center justify-center">
+              <img src="/FroFinXLogoTrans1.png" alt="FroFinX logo" className="w-full h-full object-contain" />
             </div>
-          </IonButtons>
+            <span className="hidden sm:inline text-lg font-bold text-foreground">FroFinX</span>
+          </div>
 
-          {/* Desktop Navigation Links */}
-          {!isMobile && (
-            <div className="flex items-center gap-1 ml-8">
-              <IonButton
-                fill="clear"
-                onClick={() => history.push('/dashboard')}
-                className={location.pathname === '/dashboard' ? 'ion-activated' : ''}
-              >
-                <IonIcon slot="start" icon={home} />
-                Dashboard
-              </IonButton>
-              <IonButton
-                fill="clear"
-                onClick={() => history.push('/dashboard/transactions')}
-              >
-                <IonIcon slot="start" icon={trendingUp} />
-                Transactions
-              </IonButton>
-              <IonButton
-                fill="clear"
-                onClick={() => history.push('/dashboard/analytics')}
-              >
-                <IonIcon slot="start" icon={trendingUp} />
-                Analytics
-              </IonButton>
+          {/* Divider to anchor brand from nav */}
+          <div className="hidden lg:block h-8 w-px bg-border/70" aria-hidden="true" />
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center h-11 p-1 bg-card/90 backdrop-blur">
+            {navItems.map((item, index) => {
+              const active = isActive(item.href)
+
+              return (
+                <>
+                |
+                <button
+                  key={item.href}
+                  onClick={() => go(item.href)}
+                  aria-current={active ? "page" : undefined}
+                  className={`
+                    relative hover:bg-slate-200/50 hover:text-foreground flex items-center gap-2 px-2 mx-4 h-full text-sm font-medium
+                    transition-all duration-200 ease-out
+                    ${active 
+                      ? "text-foreground" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60"}
+                      ${index === 0 ? "rounded-l-full" : ""}
+                      ${index === navItems.length - 1 ? "rounded-r-full" : ""}
+                      `}
+                      title={item.label}
+                      >
+                  {item.icon}
+                  <span>{item.label}</span>
+                </button>
+                  
+                  </>
+              )
+            })}
+            |
+        </div>
+          {/* Right Actions */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="hidden sm:flex items-center bg-secondary rounded-md px-3 py-1.5 focus-within:ring-2 focus-within:ring-primary transition-all">
+              <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              <input
+                type="text"
+                placeholder="Search..."
+                className="bg-transparent border-0 outline-none px-2 py-0 text-sm text-foreground placeholder:text-muted-foreground w-32 focus:placeholder-foreground"
+              />
             </div>
-          )}
 
-          {/* Right: Actions */}
-          <IonButtons slot="end">
-            {/* Search - Desktop only */}
-            {!isMobile && (
-              <IonSearchbar placeholder="Search..." className="max-w-xs" />
-            )}
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-md hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+              title="Toggle theme"
+            >
+              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
 
-            {/* Theme Toggle */}
-            <ThemeToggle />
+            <button className="p-2 rounded-md hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground relative" title="Notifications">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full animate-pulse" />
+            </button>
 
-            {/* Notifications */}
-            <IonButton>
-              <IonIcon icon={notifications} />
-              <IonBadge color="danger" className="absolute top-1 right-1" style={{ fontSize: '8px' }}>
-                3
-              </IonBadge>
-            </IonButton>
+            <div className="relative">
+              <button
+                onClick={() => setShowUserMenu((v) => !v)}
+                className="flex items-center justify-center w-9 h-9 rounded-full bg-primary text-primary-foreground font-semibold hover:shadow-md transition-all text-sm"
+                title="User menu"
+              >
+                U
+              </button>
 
-            {/* Profile Popover */}
-            <IonButton id="profile-trigger">
-              <IonAvatar className="w-8 h-8">
-                <div className="w-full h-full bg-blue-600 rounded-full flex items-center justify-center">
-                  <IonIcon icon={person} className="text-white" />
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg py-2 z-50 divide-y divide-border">
+                  <div className="px-4 py-3">
+                    <p className="text-sm font-semibold text-foreground">User Account</p>
+                    <p className="text-xs text-muted-foreground">user@example.com</p>
+                  </div>
+                  <div className="py-2">
+                    <button onClick={() => go('/settings')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors flex items-center gap-3">
+                      <User className="w-4 h-4" />
+                      Profile
+                    </button>
+                    <button onClick={() => go('/settings')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors flex items-center gap-3">
+                      <SettingsIcon className="w-4 h-4" />
+                      Settings
+                    </button>
+                  </div>
+                  <button onClick={() => go('/signin')} className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-secondary transition-colors flex items-center gap-3">
+                    <LogOut className="w-4 h-4" />
+                    Sign out
+                  </button>
                 </div>
-              </IonAvatar>
-              {!isMobile && <IonIcon icon={chevronDown} />}
-            </IonButton>
+              )}
+            </div>
+          </div>
+        </div>
 
-            <IonPopover trigger="profile-trigger" dismissOnSelect>
-              <IonContent>
-                <IonList>
-                  <IonItem lines="none" className="ion-padding">
-                    <IonLabel>
-                      <h2 className="font-medium">John Doe</h2>
-                      <p className="text-xs text-muted-foreground">john.doe@example.com</p>
-                    </IonLabel>
-                  </IonItem>
-                  <IonItem button onClick={() => history.push('/dashboard/profile')}>
-                    <IonIcon slot="start" icon={person} />
-                    <IonLabel>My Profile</IonLabel>
-                  </IonItem>
-                  <IonItem button onClick={() => history.push('/dashboard/settings')}>
-                    <IonIcon slot="start" icon={settings} />
-                    <IonLabel>Settings</IonLabel>
-                  </IonItem>
-                  <IonItem button onClick={handleSignOut} color="danger">
-                    <IonIcon slot="start" icon={logOut} />
-                    <IonLabel>Sign Out</IonLabel>
-                  </IonItem>
-                </IonList>
-              </IonContent>
-            </IonPopover>
-          </IonButtons>
-        </IonToolbar>
-      </IonHeader>
-    </>
-  );
+        {/* Mobile Navigation */}
+        {showMobileMenu && (
+          <nav className="lg:hidden pb-4 border-t border-border pt-2 flex flex-col gap-1">
+            {navItems.map((item) => (
+              <button
+                key={item.href}
+                onClick={() => go(item.href)}
+                aria-current={isActive(item.href) ? 'page' : undefined}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-semibold transition-all duration-200 ${
+                  isActive(item.href)
+                    ? 'bg-primary text-primary-foreground shadow-md'
+                    : 'text-foreground/70 hover:text-foreground hover:bg-secondary'
+                }`}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </nav>
+        )}
+      </div>
+    </header>
+  )
 }
 
