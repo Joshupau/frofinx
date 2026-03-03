@@ -29,14 +29,20 @@ export default function DevDomGuard() {
         return origInsertBefore.call(this, newNode, referenceNode)
       } catch (err) {
         // Log helpful debug info when HMR or Ionic router tries invalid inserts
-        // eslint-disable-next-line no-console
-        console.error('[DevDomGuard] insertBefore threw', {
-          parent: describeNode(this),
-          newNode: describeNode(newNode),
-          referenceNode: describeNode(referenceNode),
-          error: String(err),
-          stack: new Error().stack,
-        })
+        try {
+          const info = {
+            parent: describeNode(this),
+            newNode: describeNode(newNode),
+            referenceNode: describeNode(referenceNode),
+            error: String(err),
+            stack: new Error().stack,
+          }
+          // eslint-disable-next-line no-console
+          console.error('[DevDomGuard] insertBefore threw', JSON.stringify(info, null, 2))
+        } catch (logErr) {
+          // eslint-disable-next-line no-console
+          console.error('[DevDomGuard] insertBefore threw (logging failed)', String(err))
+        }
         try {
           return (this as Node).appendChild(newNode)
         } catch (err2) {
@@ -51,13 +57,19 @@ export default function DevDomGuard() {
         return origRemoveChild.call(this, child)
       } catch (err) {
         // Log helpful debug info when HMR or Ionic router tries invalid removes
-        // eslint-disable-next-line no-console
-        console.error('[DevDomGuard] removeChild threw', {
-          parent: describeNode(this),
-          child: describeNode(child),
-          error: String(err),
-          stack: new Error().stack,
-        })
+        try {
+          const info = {
+            parent: describeNode(this),
+            child: describeNode(child),
+            error: String(err),
+            stack: new Error().stack,
+          }
+          // eslint-disable-next-line no-console
+          console.error('[DevDomGuard] removeChild threw', JSON.stringify(info, null, 2))
+        } catch (logErr) {
+          // eslint-disable-next-line no-console
+          console.error('[DevDomGuard] removeChild threw (logging failed)', String(err))
+        }
         // swallow in dev to avoid noisy runtime crash during HMR; return the child
         return child
       }

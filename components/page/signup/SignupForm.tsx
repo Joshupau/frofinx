@@ -1,10 +1,17 @@
 'use client'
 
 import Image from 'next/image'
-import { useState } from 'react'
-import { Eye, EyeOff, Mail, Lock, User, Phone, Home, MapPin, Globe, Zap, CheckCircle2, AlertCircle, Upload } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Eye, EyeOff, Mail, Lock, User, Phone, Home, MapPin, Globe, CheckCircle2, Upload } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { RegisterFormData, registerSchema } from '@/validation/auth'
+import { useRegisterUser } from '@/queries/auth/auth'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import toast from 'react-hot-toast'
+
+
 
 export function SignupForm() {
   const [currentStep, setCurrentStep] = useState(1)
@@ -12,21 +19,35 @@ export function SignupForm() {
   const [passwordStrength, setPasswordStrength] = useState(0)
   const [fileName, setFileName] = useState('')
 
-  const [formData, setFormData] = useState({
-    email: '',
-    username: '',
-    password: '',
-    confirmPassword: '',
-    firstName: '',
-    lastName: '',
-    phone: '',
-    dateOfBirth: '',
-    street: '',
-    city: '',
-    country: '',
-    postalCode: '',
-    termsAccepted: false,
+  const {
+    register,
+    handleSubmit,
+    trigger,
+    setValue,
+    reset,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      username: '',
+      password: '',
+      confirmPassword: '',
+      email: undefined,
+      phonenumber: undefined,
+      firstname: undefined,
+      lastname: undefined,
+      address: undefined,
+      city: undefined,
+      country: undefined,
+      postalcode: undefined,
+    },
   })
+
+  const { mutateAsync: registerUser, isPending } = useRegisterUser()
+
+  const passwordValue = watch('password') || ''
+  const confirmPasswordValue = watch('confirmPassword') || ''
 
   const getPasswordStrength = (password: string) => {
     let strength = 0
@@ -38,36 +59,23 @@ export function SignupForm() {
     return strength
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target
-    if (type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked
-      setFormData(prev => ({ ...prev, [name]: checked }))
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }))
-      if (name === 'password') {
-        setPasswordStrength(getPasswordStrength(value))
-      }
-    }
-  }
+  useEffect(() => {
+    setPasswordStrength(getPasswordStrength(passwordValue))
+  }, [passwordValue])
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setFileName(file.name)
-    }
-  }
+  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0]
+  //   if (!file) return
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (currentStep === 1) {
-      setCurrentStep(2)
-    } else if (currentStep === 2) {
-      setCurrentStep(3)
-    } else {
-      console.log('Account creation:', formData)
-    }
-  }
+  //   setFileName(file.name)
+  //   const reader = new FileReader()
+  //   reader.onloadend = () => {
+  //     if (typeof reader.result === 'string') {
+  //       setValue('profilepicture', reader.result, { shouldValidate: true })
+  //     }
+  //   }
+  //   reader.readAsDataURL(file)
+  // }
 
   const handlePrevious = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1)
@@ -85,7 +93,44 @@ export function SignupForm() {
     return 'Strong'
   }
 
-  const progressPercentage = (currentStep / 3) * 100
+  const stepFields: Record<number, (keyof RegisterFormData)[]> = {
+    1: ['email', 'username', 'password', 'confirmPassword'],
+    2: ['firstname', 'lastname', 'phonenumber'],
+    3: ['address', 'city', 'country', 'postalcode'],
+    4: [],
+  }
+
+  const handleNextStep = async () => {
+    const fieldsToValidate = stepFields[currentStep]
+    const isValid = await trigger(fieldsToValidate, { shouldFocus: true })
+
+    if (!isValid) return
+
+    if (currentStep < 4) {
+      setCurrentStep(prev => prev + 1)
+    }
+  }
+
+  const onSubmit = async (data: RegisterFormData) => {
+    if (currentStep < 4) {
+      await handleNextStep()
+      return
+    }
+
+    registerUser(data, {
+      onSuccess: () => {
+        toast.success('Account created successfully! Please sign in.')
+        reset()
+        setCurrentStep(1)
+        setFileName('')
+        setPasswordStrength(0)
+        setShowPassword(false)
+      }
+    })
+  }
+
+  const progressPercentage = (currentStep / 4) * 100
+  const isSaving = isSubmitting || isPending
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -103,7 +148,7 @@ export function SignupForm() {
 
         <div className="mb-8">
           <div className="flex justify-between mb-3">
-            {[1, 2, 3].map(step => (
+            {[1, 2, 3, 4].map(step => (
               <div key={step} className="flex flex-col items-center">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm mb-2 transition-all duration-300 ${
                   step < currentStep ? 'bg-emerald-500 text-white' :
@@ -113,7 +158,7 @@ export function SignupForm() {
                   {step < currentStep ? <CheckCircle2 className="w-5 h-5" /> : step}
                 </div>
                 <span className="text-xs text-slate-400 text-center">
-                  {step === 1 ? 'Account' : step === 2 ? 'Personal' : 'Address'}
+                  {step === 1 ? 'Account' : step === 2 ? 'Personal' : step === 3 ? 'Address' : 'Confirm'}
                 </span>
               </div>
             ))}
@@ -126,7 +171,16 @@ export function SignupForm() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && currentStep !== 4) {
+              e.preventDefault()
+              void handleNextStep()
+            }
+          }}
+          className="space-y-4"
+        >
           {currentStep === 1 && (
             <div className="space-y-4 animate-fade-in">
               <div className="space-y-2">
@@ -136,13 +190,14 @@ export function SignupForm() {
                   <input
                     id="email"
                     type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
                     placeholder="your@email.com"
                     className="w-full pl-10 pr-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    {...register('email', {
+                      setValueAs: value => value?.trim() ? value.trim().toLowerCase() : undefined,
+                    })}
                   />
                 </div>
+                {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
               </div>
 
               <div className="space-y-2">
@@ -152,13 +207,14 @@ export function SignupForm() {
                   <input
                     id="username"
                     type="text"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleChange}
                     placeholder="Username"
                     className="w-full pl-10 pr-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    {...register('username', {
+                      setValueAs: value => value?.trim(),
+                    })}
                   />
                 </div>
+                {errors.username && <p className="text-sm text-red-500">{errors.username.message}</p>}
               </div>
 
               <div className="space-y-2">
@@ -168,11 +224,11 @@ export function SignupForm() {
                   <input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
                     placeholder="Password"
                     className="w-full pl-10 pr-10 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    {...register('password', {
+                      setValueAs: value => value?.trim(),
+                    })}
                   />
                   <button
                     type="button"
@@ -182,7 +238,8 @@ export function SignupForm() {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
-                {formData.password && (
+                {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
+                {passwordValue && (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-1 bg-slate-300 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -195,22 +252,23 @@ export function SignupForm() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="confirmPassword" className="text-sm font-medium text-white block">Confirm Password</label>
+                <label htmlFor="confirmPassword" className="text-sm font-medium text-slate-900 dark:text-white block">Confirm Password</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                   <input
                     id="confirmPassword"
                     type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
                     placeholder="Confirm Password"
                     className="w-full pl-10 pr-10 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    {...register('confirmPassword', {
+                      setValueAs: value => value?.trim() || undefined,
+                    })}
                   />
-                  {formData.confirmPassword && formData.password === formData.confirmPassword && (
+                  {confirmPasswordValue && passwordValue === confirmPasswordValue && (
                     <CheckCircle2 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-emerald-500 w-5 h-5" />
                   )}
                 </div>
+                {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>}
               </div>
             </div>
           )}
@@ -219,57 +277,49 @@ export function SignupForm() {
             <div className="space-y-4 animate-fade-in">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label htmlFor="firstName" className="text-sm font-medium text-slate-900 dark:text-white block">First name</label>
+                  <label htmlFor="firstname" className="text-sm font-medium text-slate-900 dark:text-white block">First name</label>
                   <input
-                    id="firstName"
+                    id="firstname"
                     type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
                     placeholder="First name"
                     className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    {...register('firstname', {
+                      setValueAs: value => value?.trim() || undefined,
+                    })}
                   />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="lastName" className="text-sm font-medium text-slate-900 dark:text-white block">Last name</label>
+                  <label htmlFor="lastname" className="text-sm font-medium text-slate-900 dark:text-white block">Last name</label>
                   <input
-                    id="lastName"
+                    id="lastname"
                     type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleChange}
                     placeholder="Last name"
                     className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    {...register('lastname', {
+                      setValueAs: value => value?.trim() || undefined,
+                    })}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="phone" className="text-sm font-medium text-slate-900 dark:text-white block">Phone number</label>
+                <label htmlFor="phonenumber" className="text-sm font-medium text-slate-900 dark:text-white block">Phone number</label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 w-5 h-5" />
                   <input
-                    id="phone"
+                    id="phonenumber"
                     type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
                     placeholder="Phone number"
                     className="w-full pl-10 pr-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    {...register('phonenumber', {
+                      setValueAs: value => {
+                        const trimmed = value?.trim()
+                        return trimmed ? trimmed : undefined
+                      },
+                    })}
                   />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="dateOfBirth" className="text-sm font-medium text-slate-900 dark:text-white block">Date of birth</label>
-                <input
-                  id="dateOfBirth"
-                  type="date"
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                />
+                {errors.phonenumber && <p className="text-sm text-red-500">{errors.phonenumber.message}</p>}
               </div>
             </div>
           )}
@@ -277,19 +327,20 @@ export function SignupForm() {
           {currentStep === 3 && (
             <div className="space-y-4 animate-fade-in">
               <div className="space-y-2">
-                <label htmlFor="street" className="text-sm font-medium text-slate-900 dark:text-white block">Street address</label>
+                <label htmlFor="address" className="text-sm font-medium text-slate-900 dark:text-white block">Address</label>
                 <div className="relative">
                   <Home className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 w-5 h-5" />
                   <input
-                    id="street"
+                    id="address"
                     type="text"
-                    name="street"
-                    value={formData.street}
-                    onChange={handleChange}
                     placeholder="Street address"
                     className="w-full pl-10 pr-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    {...register('address', {
+                      setValueAs: value => value?.trim() || undefined,
+                    })}
                   />
                 </div>
+                {errors.address && <p className="text-sm text-red-500">{errors.address.message}</p>}
               </div>
 
               <div className="grid grid-cols-3 gap-4">
@@ -300,13 +351,14 @@ export function SignupForm() {
                     <input
                       id="city"
                       type="text"
-                      name="city"
-                      value={formData.city}
-                      onChange={handleChange}
                       placeholder="City"
                       className="w-full pl-10 pr-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                      {...register('city', {
+                        setValueAs: value => value?.trim() || undefined,
+                      })}
                     />
                   </div>
+                  {errors.city && <p className="text-sm text-red-500">{errors.city.message}</p>}
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="country" className="text-sm font-medium text-slate-900 dark:text-white block">Country</label>
@@ -315,28 +367,30 @@ export function SignupForm() {
                     <input
                       id="country"
                       type="text"
-                      name="country"
-                      value={formData.country}
-                      onChange={handleChange}
                       placeholder="Country"
                       className="w-full pl-10 pr-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                      {...register('country', {
+                        setValueAs: value => value?.trim() || undefined,
+                      })}
                     />
                   </div>
+                  {errors.country && <p className="text-sm text-red-500">{errors.country.message}</p>}
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="postalCode" className="text-sm font-medium text-slate-900 dark:text-white block">Postal code</label>
+                  <label htmlFor="postalcode" className="text-sm font-medium text-slate-900 dark:text-white block">Postal code</label>
                   <input
-                    id="postalCode"
+                    id="postalcode"
                     type="text"
-                    name="postalCode"
-                    value={formData.postalCode}
-                    onChange={handleChange}
                     placeholder="Postal code"
                     className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                    {...register('postalcode', {
+                      setValueAs: value => value?.trim() || undefined,
+                    })}
                   />
+                  {errors.postalcode && <p className="text-sm text-red-500">{errors.postalcode.message}</p>}
                 </div>
               </div>
-
+              {/*            
               <div className="space-y-2">
                 <label htmlFor="profilePicture" className="text-sm font-medium text-slate-900 dark:text-white block">Profile picture</label>
                 <label htmlFor="profilePicture" className="block border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-center">
@@ -351,27 +405,36 @@ export function SignupForm() {
                   <p className="text-sm text-slate-900 dark:text-white font-medium">{fileName || 'Choose file or drag and drop'}</p>
                   <p className="text-xs text-slate-600 dark:text-slate-400">PNG, JPG up to 5MB</p>
                 </label>
-              </div>
+                {errors.profilepicture && <p className="text-sm text-red-500">{errors.profilepicture.message}</p>}
+              </div> */}
+            </div>
+          )}
 
-              <div className="flex items-start pt-2">
-                <input
-                  type="checkbox"
-                  id="termsAccepted"
-                  name="termsAccepted"
-                  checked={formData.termsAccepted}
-                  onChange={handleChange}
-                  className="w-4 h-4 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-blue-600 focus:ring-2 focus:ring-blue-600 cursor-pointer mt-1"
-                />
-                <label htmlFor="termsAccepted" className="ml-3 text-sm text-slate-900 dark:text-white">
-                  I agree to the{' '}
-                  <Link href="#" className="text-blue-600 dark:text-blue-400 hover:underline">
-                    Terms of Service
-                  </Link>
-                  {' '}and{' '}
-                  <Link href="#" className="text-blue-600 dark:text-blue-400 hover:underline">
-                    Privacy Policy
-                  </Link>
-                </label>
+          {currentStep === 4 && (
+            <div className="space-y-4 animate-fade-in">
+              <h2 className="text-lg font-semibold">Confirm your details</h2>
+              <div className="space-y-3 text-sm text-slate-800 dark:text-white">
+                {/* show a summary of watched values */}
+                {(() => {
+                  const vals = watch()
+                  return (
+                    <div className="grid grid-cols-1 gap-2">
+                      <div><strong>Username:</strong> {vals.username || '-'}</div>
+                      <div><strong>Email:</strong> {vals.email || '-'}</div>
+                      <div><strong>First name:</strong> {vals.firstname || '-'}</div>
+                      <div><strong>Last name:</strong> {vals.lastname || '-'}</div>
+                      <div><strong>Phone:</strong> {vals.phonenumber || '-'}</div>
+                      <div><strong>Address:</strong> {vals.address || '-'}</div>
+                      <div><strong>City:</strong> {vals.city || '-'}</div>
+                      <div><strong>Country:</strong> {vals.country || '-'}</div>
+                      <div><strong>Postal code:</strong> {vals.postalcode || '-'}</div>
+                    </div>
+                  )
+                })()}
+              </div>
+              <div className="pt-4">
+                <Button type="button" onClick={() => setCurrentStep(1)} className="mr-3">Edit</Button>
+                <span className="text-sm text-slate-500">If everything looks good, click Create account.</span>
               </div>
             </div>
           )}
@@ -382,15 +445,24 @@ export function SignupForm() {
                 type="button"
                 onClick={handlePrevious}
                 className="flex-1 py-3 px-4 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white rounded-lg font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-200"
+                disabled={isSaving}
               >
                 Previous
               </Button>
             )}
             <Button
-              type="submit"
-              className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors duration-200"
+              type="button"
+              onClick={() => {
+                if (currentStep === 4) {
+                  void handleSubmit(onSubmit)()
+                } else {
+                  void handleNextStep()
+                }
+              }}
+              className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors duration-200 disabled:opacity-60"
+              disabled={isSaving}
             >
-              {currentStep === 3 ? 'Create account' : 'Next'}
+              {currentStep === 4 ? (isSaving ? 'Creating account...' : 'Create account') : 'Next'}
             </Button>
           </div>
         </form>

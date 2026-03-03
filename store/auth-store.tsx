@@ -1,20 +1,14 @@
 // store/auth-store.ts
+import { AccessToken } from '@/types/auth';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export interface AuthData {
-  token: string;
-  fullname: string;
-  username: string;
-  auth: string;
-  userid: string
-}
 
 interface AuthState {
-  user: AuthData | null;
+  user: AccessToken | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  setAuth: (authData: AuthData) => void;
+  setAuth: (authData: AccessToken) => void;
   clearAuth: () => void;
   setLoading: (loading: boolean) => void;
 }

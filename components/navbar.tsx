@@ -101,12 +101,12 @@ export default function DNavbar() {
           {/* Right Actions */}
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden sm:flex items-center bg-secondary rounded-md px-3 py-1.5 focus-within:ring-2 focus-within:ring-primary transition-all">
-              <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              {/* <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               <input
                 type="text"
                 placeholder="Search..."
                 className="bg-transparent border-0 outline-none px-2 py-0 text-sm text-foreground placeholder:text-muted-foreground w-32 focus:placeholder-foreground"
-              />
+              /> */}
             </div>
 
             <button
