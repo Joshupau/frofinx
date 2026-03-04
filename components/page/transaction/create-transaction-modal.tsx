@@ -14,14 +14,27 @@ interface CreateTransactionModalProps {
   open: boolean
   onClose: () => void
   onSuccess?: () => void
+  initialWalletId?: string
+  initialType?: 'income' | 'expense' | 'transfer'
+  title?: string
 }
 
-export function CreateTransactionModal({ open, onClose, onSuccess }: CreateTransactionModalProps) {
+export function CreateTransactionModal({ 
+  open, 
+  onClose, 
+  onSuccess,
+  initialWalletId,
+  initialType = 'expense',
+  title = 'New Transaction'
+}: CreateTransactionModalProps) {
   const [formData, setFormData] = useState<Partial<CreateTransactionData>>({
-    type: 'expense',
+    type: initialType,
+    walletId: initialWalletId,
     amount: 0,
     description: '',
   })
+
+  console.log(initialWalletId, initialType)
 
   const { mutate: createTransaction, isPending } = useCreateTransaction()
   const { data: walletsResponse } = useListWallets()
@@ -85,7 +98,7 @@ export function CreateTransactionModal({ open, onClose, onSuccess }: CreateTrans
       <div className="bg-card border border-border rounded-lg shadow-lg max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-lg font-semibold text-foreground">New Transaction</h2>
+          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
           <button
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground transition-colors"

@@ -60,7 +60,7 @@ export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
             <div className="h-8 bg-secondary rounded animate-pulse" />
           ) : (
             <p className={`text-2xl font-bold ${stat.color}`}>
-              {typeof stat.value === 'number' && stat.value > 100 ? `$${Math.abs(stat.value).toLocaleString('en-US', { maximumFractionDigits: 0 })}` : stat.value}
+              {typeof stat.value === 'number' && stat.value > 100 ? `₱${Math.abs(stat.value).toLocaleString('en-US', { maximumFractionDigits: 0 })}` : stat.value}
             </p>
           )}
         </div>

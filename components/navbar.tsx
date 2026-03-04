@@ -41,16 +41,8 @@ export default function DNavbar() {
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/')
 
   const go = (href: string) => {
-    // Close mobile menu
-    setShowMobileMenu(false)
-    // Close user menu
-    setShowUserMenu(false)
-    // Navigate
     history.push(href)
-    // Ensure scroll to top
-    setTimeout(() => {
-      window.scrollTo(0, 0)
-    }, 0)
+    setShowMobileMenu(false)
   }
 
   return (

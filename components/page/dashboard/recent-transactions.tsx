@@ -1,133 +1,153 @@
 'use client'
 
-import { ArrowUpRight, ArrowDownLeft, Zap, Home, ShoppingCart } from 'lucide-react'
+import { useMemo } from 'react'
+import { ArrowUpRight, ArrowDownLeft } from 'lucide-react'
 import Link from 'next/link'
+import { useListTransactions } from '@/queries/user/transaction/transaction'
 
-interface Transaction {
+interface TransactionViewModel {
   id: string
   title: string
   description: string
   date: string
-  amount: string
+  amount: number
   type: 'income' | 'expense'
-  icon: React.ReactNode
   status: 'completed' | 'pending'
 }
 
-const transactions: Transaction[] = [
-  {
-    id: '1',
-    title: 'Salary Deposit',
-    description: 'Monthly salary',
-    date: 'Jan 18, 2026',
-    amount: '+$5,200.00',
-    type: 'income',
-    icon: <ArrowUpRight className="w-5 h-5" />,
-    status: 'completed',
-  },
-  {
-    id: '2',
-    title: 'Rent Payment',
-    description: 'Monthly rent',
-    date: 'Jan 17, 2026',
-    amount: '-$1,500.00',
-    type: 'expense',
-    icon: <ArrowDownLeft className="w-5 h-5" />,
-    status: 'completed',
-  },
-  {
-    id: '3',
-    title: 'Grocery Shopping',
-    description: 'Weekly groceries',
-    date: 'Jan 16, 2026',
-    amount: '-$245.30',
-    type: 'expense',
-    icon: <ArrowDownLeft className="w-5 h-5" />,
-    status: 'completed',
-  },
-  {
-    id: '4',
-    title: 'Investment Return',
-    description: 'Portfolio gains',
-    date: 'Jan 15, 2026',
-    amount: '+$890.00',
-    type: 'income',
-    icon: <ArrowUpRight className="w-5 h-5" />,
-    status: 'completed',
-  },
-  {
-    id: '5',
-    title: 'Utility Bills',
-    description: 'Electricity & Water',
-    date: 'Jan 14, 2026',
-    amount: '-$156.42',
-    type: 'expense',
-    icon: <ArrowDownLeft className="w-5 h-5" />,
-    status: 'pending',
-  },
-]
+interface TransactionApiItem {
+  _id?: string
+  id?: string
+  title?: string
+  description?: string
+  date?: string
+  createdAt?: string
+  amount?: number
+  type?: 'income' | 'expense'
+  status?: 'completed' | 'pending'
+}
+
+const normalizeTransaction = (transaction: TransactionApiItem, index: number): TransactionViewModel => {
+  const resolvedId = transaction._id ?? transaction.id ?? `transaction-${index}`
+  const transactionDate = transaction.date || transaction.createdAt || new Date().toISOString()
+  const dateObj = new Date(transactionDate)
+  const formattedDate = dateObj.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+
+  return {
+    id: resolvedId,
+    title: transaction.title || 'Transaction',
+    description: transaction.description || '',
+    date: formattedDate,
+    amount: Number(transaction.amount) || 0,
+    type: transaction.type || 'expense',
+    status: transaction.status || 'completed',
+  }
+}
 
 export function RecentTransactions() {
+  const { data: transactionResponse, isLoading } = useListTransactions({ limit: '5' })
+
+  const transactions = useMemo(() => {
+    const responseData = transactionResponse?.data as
+      | TransactionApiItem[]
+      | { items?: TransactionApiItem[]; transactions?: TransactionApiItem[] }
+      | undefined
+
+    if (Array.isArray(responseData)) {
+      return responseData.map((t, idx) => normalizeTransaction(t, idx))
+    }
+
+    if (responseData && Array.isArray(responseData.items)) {
+      return responseData.items.map((t, idx) => normalizeTransaction(t, idx))
+    }
+
+    if (responseData && Array.isArray(responseData.transactions)) {
+      return responseData.transactions.map((t, idx) => normalizeTransaction(t, idx))
+    }
+
+    return []
+  }, [transactionResponse])
+
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden transition-all duration-300">
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-border">
         <h2 className="text-lg font-bold text-foreground">Recent Transactions</h2>
-        <Link href="#" className="text-sm font-semibold text-accent hover:underline">
+        <Link href="/transactions" className="text-sm font-semibold text-accent hover:underline">
           VIEW ALL
         </Link>
       </div>
 
       {/* Transactions List */}
       <div className="divide-y divide-border overflow-y-auto max-h-96">
-        {transactions.map((transaction, index) => (
-          <div
-            key={transaction.id}
-            className="flex items-center justify-between p-4 hover:bg-secondary transition-colors group"
-          >
-            {/* Left: Icon & Details */}
-            <div className="flex items-center gap-4 flex-1">
-              <div className={`p-2.5 rounded-lg transition-colors ${
-                transaction.type === 'income'
-                  ? 'bg-success/20 text-success dark:bg-success/30'
-                  : 'bg-warning/20 text-warning dark:bg-warning/30'
-              }`}>
-                {transaction.type === 'income' ? (
-                  <ArrowUpRight className="w-5 h-5" />
-                ) : (
-                  <ArrowDownLeft className="w-5 h-5" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground">{transaction.title}</p>
-                <p className="text-xs text-muted-foreground">{transaction.description}</p>
-              </div>
-            </div>
-
-            {/* Right: Amount & Status */}
-            <div className="flex items-center gap-4 text-right">
-              <div className="hidden sm:block">
-                <p className="text-xs text-muted-foreground">{transaction.date}</p>
-              </div>
-              <div className="text-right">
-                <p className={`text-sm font-bold ${
-                  transaction.type === 'income'
-                    ? 'text-success'
-                    : 'text-foreground'
-                }`}>
-                  {transaction.amount}
-                </p>
-                <p className={`text-xs px-2 py-0.5 rounded-full inline-block mt-1 ${
-                  transaction.status === 'completed'
-                    ? 'bg-success/20 text-success dark:bg-success/30'
-                    : 'bg-warning/20 text-warning dark:bg-warning/30'
-                }`}>
-                  {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                </p>
-              </div>
-            </div>
+        {isLoading ? (
+          <div className="space-y-2 p-4">
+            {[...Array(5)].map((_, index) => (
+              <div key={index} className="h-16 bg-secondary rounded animate-pulse" />
+            ))}
           </div>
-        ))}
+        ) : transactions.length > 0 ? (
+          transactions.map((transaction) => (
+            <div
+              key={transaction.id}
+              className="flex items-center justify-between p-4 hover:bg-secondary transition-colors group"
+            >
+              {/* Left: Icon & Details */}
+              <div className="flex items-center gap-4 flex-1">
+                <div
+                  className={`p-2.5 rounded-lg transition-colors ${
+                    transaction.type === 'income'
+                      ? 'bg-success/20 text-success dark:bg-success/30'
+                      : 'bg-warning/20 text-warning dark:bg-warning/30'
+                  }`}
+                >
+                  {transaction.type === 'income' ? (
+                    <ArrowUpRight className="w-5 h-5" />
+                  ) : (
+                    <ArrowDownLeft className="w-5 h-5" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground">{transaction.title}</p>
+                  <p className="text-xs text-muted-foreground">{transaction.description}</p>
+                </div>
+              </div>
+
+              {/* Right: Amount & Status */}
+              <div className="flex items-center gap-4 text-right">
+                <div className="hidden sm:block">
+                  <p className="text-xs text-muted-foreground">{transaction.date}</p>
+                </div>
+                <div className="text-right">
+                  <p
+                    className={`text-sm font-bold ${
+                      transaction.type === 'income' ? 'text-success' : 'text-foreground'
+                    }`}
+                  >
+                    {transaction.type === 'income' ? '+' : '-'}₱{transaction.amount.toFixed(2)}
+                  </p>
+                  <p
+                    className={`text-xs px-2 py-0.5 rounded-full inline-block mt-1 ${
+                      transaction.status === 'completed'
+                        ? 'bg-success/20 text-success dark:bg-success/30'
+                        : 'bg-warning/20 text-warning dark:bg-warning/30'
+                    }`}
+                  >
+                    {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="p-6 text-center text-muted-foreground">
+            <p>No transactions found</p>
+          </div>
+        )}
       </div>
     </div>
   )

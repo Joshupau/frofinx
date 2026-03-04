@@ -11,12 +11,12 @@ import Navbar from '@/components/navbar';
 import SignInPage from '@/ionic-pages/SignInPage';
 import SignUpPage from '@/ionic-pages/SignUpPage';
 import DashboardPage from '@/ionic-pages/DashboardPage';
-import WalletsPage from '@/ionic-pages/WalletsPage';
 import BillsPage from '@/ionic-pages/BillsPage';
 import BudgetsPage from '@/ionic-pages/BudgetsPage';
 import CategoriesPage from '@/ionic-pages/CategoriesPage';
 import SettingsPage from '@/ionic-pages/SettingsPage';
 import { TransactionsPage } from '@/ionic-pages/TransactionsPage';
+import { WalletsPage } from '@/ionic-pages/WalletsPage';
 
 setupIonicReact({
   mode: 'md', // Use Material Design by default, auto-switches on iOS

@@ -33,6 +33,11 @@ const convertFilterToParams = (filters: FilterState): ListTransactionsParams => 
   if (filters.dateRange && filters.dateRange !== 'all') {
     const today = new Date()
     let startDate = new Date()
+    let endDate = new Date()
+    // startDate is start of the month and endDate is end of the month by default
+    startDate.setDate(1)
+    endDate.setMonth(endDate.getMonth() + 1)
+    endDate.setDate(0)
 
     switch (filters.dateRange) {
       case 'today':
@@ -50,7 +55,7 @@ const convertFilterToParams = (filters: FilterState): ListTransactionsParams => 
     }
 
     params.startDate = startDate.toISOString().split('T')[0]
-    params.endDate = today.toISOString().split('T')[0]
+    params.endDate = endDate.toISOString().split('T')[0]
   }
 
   return params

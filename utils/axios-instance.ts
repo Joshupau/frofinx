@@ -23,19 +23,11 @@ export const axiosInstanceNoAuth = axios.create({
 const RequestInterceptor = (config: any) => {
   // Try to get token from localStorage
   let token = localStorage.getItem("auth");
-  
-  // Debug: log the token attempt
-  if (!token) {
-    console.warn("[Axios] No token found in localStorage");
-  } else {
-    console.log("[Axios] Token found, adding to Authorization header");
-  }
-  
+
   if (token) {
     config.headers["Authorization"] = `Bearer ${token}`;
   }
   
-  console.log("[Axios Request] Headers:", config.headers);
   return config;
 }
 

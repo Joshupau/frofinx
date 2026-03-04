@@ -58,7 +58,7 @@ export function TransactionList({ transactions, isLoading, onTransactionClick }:
 
   const formatAmount = (amount: number, type: string) => {
     const prefix = type === 'income' ? '+' : type === 'expense' ? '-' : ''
-    return `${prefix}$${Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    return `${prefix}₱${Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
 
   if (isLoading) {
