@@ -42,7 +42,9 @@ export function SigninForm() {
       password: password.toString(),
     }, {
       onSuccess: (data) => {
-        const token = jwtDecode<AccessToken>(data.access);
+        const token = jwtDecode<AccessToken>(data.data?.access);
+        // Save the raw JWT token to localStorage for axios interceptor
+        localStorage.setItem('auth', data.data?.access);
         setAuth(token);
         toast.success('Logged in successfully!')
         history.push('/dashboard')

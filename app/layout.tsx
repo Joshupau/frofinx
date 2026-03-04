@@ -5,7 +5,6 @@ import DevOverlayClient from '@/components/DevOverlayClient'
 import InitialLoader from '@/components/InitialLoader'
 import DevDomGuard from '@/components/DevDomGuard'
 
-import './globals.css'
 import './ionic-theme.css'
 import ThemeInitializer from '@/components/ThemeInitializer'
 
@@ -13,19 +12,18 @@ import ThemeInitializer from '@/components/ThemeInitializer'
 import '@ionic/react/css/core.css'
 
 /* Basic CSS for apps built with Ionic */
-import '@ionic/react/css/normalize.css'
-import '@ionic/react/css/structure.css'
-import '@ionic/react/css/typography.css'
+// import '@ionic/react/css/normalize.css'
+// import '@ionic/react/css/structure.css'
+// import '@ionic/react/css/typography.css'
 
-/* Optional CSS utils that can be commented out */
-import '@ionic/react/css/padding.css'
-// Optional: float utilities cause Turbopack CSS parsing errors (:host-context)
-// Removed import to avoid parser issues; enable if using webpack or provide a local replacement
-// import '@ionic/react/css/float-elements.css'
-import '@ionic/react/css/text-alignment.css'
-import '@ionic/react/css/text-transformation.css'
-import '@ionic/react/css/flex-utils.css'
-import '@ionic/react/css/display.css'
+/* Optional CSS utils */
+// import '@ionic/react/css/padding.css'
+// import '@ionic/react/css/text-alignment.css'
+// import '@ionic/react/css/text-transformation.css'
+// import '@ionic/react/css/flex-utils.css'
+// import '@ionic/react/css/display.css'
+
+import './globals.css'
 import DevErrorOverlay from '@/components/DevErrorOverlay'
 // import { setupIonicReact } from '@ionic/react'
 

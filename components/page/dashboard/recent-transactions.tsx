@@ -89,8 +89,8 @@ export function RecentTransactions() {
             <div className="flex items-center gap-4 flex-1">
               <div className={`p-2.5 rounded-lg transition-colors ${
                 transaction.type === 'income'
-                  ? 'bg-emerald-500/20 text-emerald-500'
-                  : 'bg-amber-400/20 text-amber-400'
+                  ? 'bg-success/20 text-success dark:bg-success/30'
+                  : 'bg-warning/20 text-warning dark:bg-warning/30'
               }`}>
                 {transaction.type === 'income' ? (
                   <ArrowUpRight className="w-5 h-5" />
@@ -112,15 +112,15 @@ export function RecentTransactions() {
               <div className="text-right">
                 <p className={`text-sm font-bold ${
                   transaction.type === 'income'
-                    ? 'text-emerald-500'
+                    ? 'text-success'
                     : 'text-foreground'
                 }`}>
                   {transaction.amount}
                 </p>
                 <p className={`text-xs px-2 py-0.5 rounded-full inline-block mt-1 ${
                   transaction.status === 'completed'
-                    ? 'bg-emerald-500/20 text-emerald-500'
-                    : 'bg-amber-400/20 text-amber-400'
+                    ? 'bg-success/20 text-success dark:bg-success/30'
+                    : 'bg-warning/20 text-warning dark:bg-warning/30'
                 }`}>
                   {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
                 </p>

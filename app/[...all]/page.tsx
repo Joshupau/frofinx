@@ -8,6 +8,12 @@ export async function generateStaticParams() {
     { all: ['signin'] },
     { all: ['signup'] },
     { all: ['dashboard'] },
+    { all: ['transactions'] },
+    { all: ['budgets'] },
+    { all: ['bills'] },
+    { all: ['reports'] },
+    { all: ['settings'] },
+    
   ]
 }
 

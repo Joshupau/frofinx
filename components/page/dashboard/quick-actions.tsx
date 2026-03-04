@@ -42,11 +42,11 @@ export function QuickActions() {
         <div className="space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-border">
             <span className="text-sm text-muted-foreground">Available Balance</span>
-            <span className="text-lg font-bold text-emerald-500">$89,235.58</span>
+            <span className="text-lg font-bold text-success">$89,235.58</span>
           </div>
           <div className="flex items-center justify-between pb-3 border-b border-border">
             <span className="text-sm text-muted-foreground">Pending</span>
-            <span className="text-lg font-bold text-amber-400">$2,426.42</span>
+            <span className="text-lg font-bold text-warning">$2,426.42</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Credit Limit</span>

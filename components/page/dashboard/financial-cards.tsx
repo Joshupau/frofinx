@@ -42,10 +42,10 @@ const cards: FinancialCard[] = [
 ]
 
 const colorMap = {
-  blue: 'bg-blue-500',
-  green: 'bg-emerald-500',
-  orange: 'bg-amber-400',
-  purple: 'bg-purple-500',
+  blue: 'bg-blue-500 dark:bg-blue-600',
+  green: 'bg-success dark:bg-success',
+  orange: 'bg-warning dark:bg-warning',
+  purple: 'bg-purple-500 dark:bg-purple-600',
 }
 
 export function FinancialCards() {
@@ -65,8 +65,8 @@ export function FinancialCards() {
               </div>
                 <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
                 isPositive
-                  ? 'bg-emerald-500/20 text-emerald-500'
-                  : 'bg-destructive/20 text-destructive'
+                  ? 'bg-success/20 text-success dark:bg-success/30 dark:text-success'
+                  : 'bg-destructive/20 text-destructive dark:bg-destructive/30 dark:text-destructive'
               }`}>
                 {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                 {isPositive ? '+' : ''}{card.change}%

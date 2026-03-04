@@ -29,6 +29,8 @@ export const useAuthStore = create<AuthState>()(
       },
 
       clearAuth: () => {
+        // Clear the JWT token from localStorage
+        localStorage.removeItem('auth');
         set({
           user: null,
           isAuthenticated: false,

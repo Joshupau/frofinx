@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { useHistory, useLocation } from 'react-router-dom'
+import { useHistory, useLocation, Link } from 'react-router-dom'
 import {
   Moon,
   Sun,
@@ -41,12 +41,20 @@ export default function DNavbar() {
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/')
 
   const go = (href: string) => {
-    history.push(href)
+    // Close mobile menu
     setShowMobileMenu(false)
+    // Close user menu
+    setShowUserMenu(false)
+    // Navigate
+    history.push(href)
+    // Ensure scroll to top
+    setTimeout(() => {
+      window.scrollTo(0, 0)
+    }, 0)
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-gradient-to-b from-background via-background/95 to-background/85 backdrop-blur-sm border-b border-border shadow-sm">
+    <header className="sticky top-0 z-50 bg-background border-b border-border transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-3">
           {/* Logo / brand */}
@@ -67,37 +75,31 @@ export default function DNavbar() {
           {/* Divider to anchor brand from nav */}
           <div className="hidden lg:block h-8 w-px bg-border/70" aria-hidden="true" />
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center h-11 p-1 bg-card/90 backdrop-blur">
-            {navItems.map((item, index) => {
+          <nav className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+            {navItems.map((item) => {
               const active = isActive(item.href)
 
               return (
-                <>
-                |
-                <button
+                <Link
                   key={item.href}
-                  onClick={() => go(item.href)}
+                  to={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`
-                    relative hover:bg-slate-200/50 hover:text-foreground flex items-center gap-2 px-2 mx-4 h-full text-sm font-medium
-                    transition-all duration-200 ease-out
-                    ${active 
-                      ? "text-foreground" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60"}
-                      ${index === 0 ? "rounded-l-full" : ""}
-                      ${index === navItems.length - 1 ? "rounded-r-full" : ""}
-                      `}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200
+                      ${
+                        active 
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary '
+                      }
+                    `}
                       title={item.label}
                       >
                   {item.icon}
                   <span>{item.label}</span>
-                </button>
-                  
-                  </>
+                </Link>
               )
             })}
-            |
-        </div>
+            
+        </nav>
           {/* Right Actions */}
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden sm:flex items-center bg-secondary rounded-md px-3 py-1.5 focus-within:ring-2 focus-within:ring-primary transition-all">
