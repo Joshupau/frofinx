@@ -1,19 +1,18 @@
 import AppWrapper from '../../components/AppWrapper'
-// import { setupIonicReact } from '@ionic/react'
 
-// setupIonicReact();
+export const dynamicParams = false
 
 export async function generateStaticParams() {
   return [
     { all: ['signin'] },
     { all: ['signup'] },
     { all: ['dashboard'] },
+    { all: ['wallets'] },
     { all: ['transactions'] },
     { all: ['budgets'] },
     { all: ['bills'] },
-    { all: ['reports'] },
+    { all: ['categories'] },
     { all: ['settings'] },
-    
   ]
 }
 
