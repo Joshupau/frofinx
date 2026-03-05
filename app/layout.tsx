@@ -12,22 +12,11 @@ import ThemeInitializer from '@/components/ThemeInitializer'
 import '@ionic/react/css/core.css'
 
 /* Basic CSS for apps built with Ionic */
-// import '@ionic/react/css/normalize.css'
-// import '@ionic/react/css/structure.css'
-// import '@ionic/react/css/typography.css'
 
 /* Optional CSS utils */
-// import '@ionic/react/css/padding.css'
-// import '@ionic/react/css/text-alignment.css'
-// import '@ionic/react/css/text-transformation.css'
-// import '@ionic/react/css/flex-utils.css'
-// import '@ionic/react/css/display.css'
 
 import './globals.css'
 import DevErrorOverlay from '@/components/DevErrorOverlay'
-// import { setupIonicReact } from '@ionic/react'
-
-// setupIonicReact();
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
@@ -62,12 +51,16 @@ export default function RootLayout({
             </path>
           </svg>
         </div>
-        {/* DEBUG: temporary visible marker to verify server-rendered HTML */}
-        <div style={{ position: 'fixed', top: 8, right: 8, background: '#ff0', color: '#000', padding: '6px 8px', zIndex: 9999, borderRadius: 4 }}>SSR OK</div>
         <ThemeInitializer />
-        {/* Dev overlay to show client runtime errors (visible only in browser) */}
-        <DevOverlayClient />
-        {process.env.NODE_ENV === 'development' ? <DevDomGuard /> : null}
+        {process.env.NODE_ENV === 'development' && (
+          <>
+            {/* Dev overlay to show client runtime errors (visible only in development) */}
+            <DevOverlayClient />
+            {/* DEBUG: temporary visible marker to verify server-rendered HTML */}
+            <div style={{ position: 'fixed', top: 8, right: 8, background: '#ff0', color: '#000', padding: '6px 8px', zIndex: 9999, borderRadius: 4 }}>SSR OK</div>
+            <DevDomGuard />
+          </>
+        )}
         <InitialLoader />
         {children}
       </body>
