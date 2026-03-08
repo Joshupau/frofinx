@@ -9,9 +9,10 @@ import { DashboardHeader } from '@/components/page/dashboard/dashboard-header'
 import { TransactionStats } from '@/components/page/transaction/transaction-stats'
 import { FilterState, TransactionFilters } from '@/components/page/transaction/transaction-filter'
 import { TransactionList } from '@/components/page/transaction/transaction-list'
-import { useListTransactions } from '@/queries/user/transaction/transaction'
+import { useListTransactions, useTransactionsSummary } from '@/queries/user/transaction/transaction'
 import { ListTransactionsParams } from '@/types/transaction'
 import { CreateTransactionModal } from '@/components/page/transaction/create-transaction-modal'
+import { TransactionImportModal } from '@/components/page/transaction/transaction-import-modal'
 
 // Helper function to convert filter state to API params
 const convertFilterToParams = (filters: FilterState): ListTransactionsParams => {
@@ -60,44 +61,52 @@ const convertFilterToParams = (filters: FilterState): ListTransactionsParams => 
 
   return params
 }
-
 export function TransactionsPage() {
+
   const [filters, setFilters] = useState<FilterState>({
     type: 'all',
     status: 'all',
-    dateRange: 'month',
+    dateRange: 'all',
     search: '',
   })
   const [showFilters, setShowFilters] = useState(false)
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [page, setPage] = useState(0);
+  const [limit, setLimit] = useState(5);
 
   // Convert filters to API params
-  const apiParams = convertFilterToParams(filters)
+  const apiParams = {
+    ...convertFilterToParams(filters),
+    page: String(page), 
+    limit: String(limit),
+  };
 
   // Fetch transactions from API
-  const { data: apiResponse, isLoading, error, refetch } = useListTransactions(apiParams)
+  const { data: apiResponse, isLoading, error, refetch } = useListTransactions(apiParams);
+  // Fetch summary stats
+  const { data: summaryData, isLoading: summaryLoading } = useTransactionsSummary(apiParams);
   
-  // Extract transactions from API response
+  // Extract transactions and pagination info from API response
   const transactions = useMemo(() => {
-    if (!apiResponse?.data) return []
+    if (!apiResponse?.data) return [];
     // Handle both array and paginated response formats
-    return Array.isArray(apiResponse.data) ? apiResponse.data : apiResponse.data.items || []
-  }, [apiResponse])
+    return Array.isArray(apiResponse.data)
+      ? apiResponse.data
+      : apiResponse.data.items || [];
+  }, [apiResponse]);
 
-  // Calculate stats
+    const totalItems = apiResponse?.data?.totalItems || transactions.length;
+  const totalPages = apiResponse?.data?.totalPages || 1;
+
+  // Use summary stats from API
   const stats = {
-    totalIncome: transactions
-      .filter((t: any) => t.type === 'income')
-      .reduce((sum: number, t: any) => sum + t.amount, 0),
-    totalExpense: transactions
-      .filter((t: any) => t.type === 'expense')
-      .reduce((sum: number, t: any) => sum + t.amount, 0),
-    totalTransfers: transactions
-      .filter((t: any) => t.type === 'transfer')
-      .reduce((sum: number, t: any) => sum + t.amount, 0),
-    transactionCount: transactions.length,
-  }
+    totalIncome: summaryData?.data?.totalIncome ?? 0,
+    totalExpense: summaryData?.data?.totalExpenses ?? 0,
+    totalTransfers: summaryData?.data?.totalTransfers ?? 0,
+    transactionCount: summaryData?.data?.totalTransactions ?? 0,
+  };
 
   return (
     <IonPage>
@@ -118,6 +127,10 @@ export function TransactionsPage() {
                   <Button variant="outline" className="gap-2" size="sm">
                     <Download className="w-4 h-4" />
                     Export
+                  </Button>
+                  <Button variant="outline" className="gap-2" size="sm" onClick={() => setShowImportModal(true)}>
+                    <Download className="w-4 h-4" />
+                    Import
                   </Button>
                   <Button className="gap-2" onClick={() => setShowCreateModal(true)}>
                     <Plus className="w-4 h-4" />
@@ -173,12 +186,41 @@ export function TransactionsPage() {
                     isLoading={isLoading}
                     onTransactionClick={setSelectedTransaction}
                   />
+                  {/* Pagination Controls */}
+                  <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-secondary/50">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page <= 0}
+                      onClick={() => setPage(page - 1)}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                      Page {page + 1} of {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page + 1 >= totalPages}
+                      onClick={() => setPage(page + 1)}
+                    >
+                      Next
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </main>
       </IonContent>
+
+      {/* Import Transactions Modal */}
+      <TransactionImportModal
+        open={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onSuccess={() => refetch()}
+      />
 
       {/* Create Transaction Modal */}
       <CreateTransactionModal

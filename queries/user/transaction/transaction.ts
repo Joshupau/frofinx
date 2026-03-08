@@ -1,6 +1,6 @@
 // /api/v1/transaction routes
 
-import { axiosInstance } from "@/utils/axios-instance";
+import { axiosInstance, axiosInstanceFormData } from "@/utils/axios-instance";
 import { handleApiError } from "@/utils/error-handler";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -10,6 +10,9 @@ import {
   DeleteTransactionData,
   GetMonthlyReportParams,
   GetCategoryBreakdownParams,
+  ImportTransactionsData,
+  transactionsSummaryParams,
+  quickStatsTransactionParams,
 } from "@/types/transaction";
 
 // Create Transaction
@@ -101,3 +104,50 @@ export const useCategoryBreakdown = (params?: GetCategoryBreakdownParams) => {
     enabled: true,
   });
 };
+
+
+// Import Transactions
+const importTransactions = async (data: ImportTransactionsData) => {
+  const response = await axiosInstanceFormData.post("/transaction/import", data);
+  return response.data;
+}
+
+export const useImportTransactions = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof importTransactions>[0]) =>
+      importTransactions(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    },
+    onError: (error) => {
+      handleApiError(error);
+    },
+  });
+};
+
+const getSummary = async (params: transactionsSummaryParams) => {
+  const response = await axiosInstance.get("/transaction/summary", { params });
+  return response.data;
+}
+
+export const useTransactionsSummary = (params?: transactionsSummaryParams) => {
+  return useQuery({
+    queryKey: ["transactions-summary", params],
+    queryFn: () => getSummary(params || {}),
+    enabled: true,
+  });
+}
+
+const getQuickStats = async (params: quickStatsTransactionParams) => {
+  const response = await axiosInstance.get("/transaction/quick-stats", { params });
+  return response.data;
+}
+
+export const useQuickStats = (params?: quickStatsTransactionParams) => {
+  return useQuery({
+    queryKey: ["transactions-quick-stats", params],
+    queryFn: () => getQuickStats(params || { period: 'month' }),
+    enabled: true,
+  });
+}

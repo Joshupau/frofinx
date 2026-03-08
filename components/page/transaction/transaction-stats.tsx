@@ -22,6 +22,7 @@ export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
       icon: <TrendingUp className="w-5 h-5" />,
       color: 'text-success',
       bgColor: 'bg-success/10',
+      currency: '₱',
     },
     {
       label: 'Total Expenses',
@@ -29,6 +30,7 @@ export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
       icon: <TrendingDown className="w-5 h-5" />,
       color: 'text-destructive',
       bgColor: 'bg-destructive/10',
+      currency: '₱',
     },
     {
       label: 'Transfers',
@@ -36,6 +38,7 @@ export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
       icon: <Shuffle className="w-5 h-5" />,
       color: 'text-accent',
       bgColor: 'bg-accent/10',
+      currency: '₱',
     },
     {
       label: 'Transactions',
@@ -43,6 +46,7 @@ export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
       icon: <MoreHorizontal className="w-5 h-5" />,
       color: 'text-primary',
       bgColor: 'bg-primary/10',
+      currency: '',
     },
   ]
 
@@ -60,7 +64,7 @@ export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
             <div className="h-8 bg-secondary rounded animate-pulse" />
           ) : (
             <p className={`text-2xl font-bold ${stat.color}`}>
-              {typeof stat.value === 'number' && stat.value > 100 ? `₱${Math.abs(stat.value).toLocaleString('en-US', { maximumFractionDigits: 0 })}` : stat.value}
+              {typeof stat.value === 'number' && stat.value > 100 ? `${stat.currency}${Math.abs(stat.value).toLocaleString('en-US', { maximumFractionDigits: 2 })}` : stat.value}
             </p>
           )}
         </div>

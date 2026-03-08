@@ -1,3 +1,5 @@
+import { wallet } from "ionicons/icons";
+
 export type TransactionType = 'income' | 'expense' | 'transfer';
 
 export type TransactionStatus = 'completed' | 'pending' | 'cancelled';
@@ -59,3 +61,21 @@ export type GetCategoryBreakdownParams = {
   endDate?: string;
   walletId?: string;
 };
+
+export type ImportTransactionsData = {
+  file: File;
+  walletId: string;
+  categoryId?: string;
+  preview?: string | boolean;
+}
+
+export type transactionsSummaryParams = {
+  month?: string;
+  year?: string;
+  walletId?: string;
+}
+
+export type quickStatsTransactionParams = {
+  period: string; // today, week, month, year, all
+  walletId?: string;
+}

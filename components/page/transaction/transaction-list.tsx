@@ -2,6 +2,7 @@
 
 import { ArrowUpRight, ArrowDownLeft, Shuffle, Clock, Check, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { formatDate } from '@/utils/formatter'
 
 interface TransactionItem {
   id: string
@@ -111,7 +112,7 @@ export function TransactionList({ transactions, isLoading, onTransactionClick }:
                 }`}>
                   {formatAmount(transaction.amount, transaction.type)}
                 </p>
-                <p className="text-xs text-muted-foreground">{transaction.date}</p>
+                <p className="text-xs text-muted-foreground">{formatDate(transaction.date)}</p>
               </div>
 
               <Badge className={`flex items-center gap-1 flex-shrink-0 ${getStatusBadge(transaction.status)}`}>
