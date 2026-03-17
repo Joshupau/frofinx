@@ -5,7 +5,7 @@ import { IonContent, IonPage } from '@ionic/react'
 export default function SignInPage() {
   return (
     <IonPage>
-      <IonContent fullscreen className="min-h-screen bg-background">
+      <IonContent fullscreen className="bg-background">
         <div className="min-h-screen flex flex-col md:flex-row bg-background">
           <div className="hidden md:flex md:w-2/5 relative min-h-screen overflow-hidden border-r border-border">
             <div
