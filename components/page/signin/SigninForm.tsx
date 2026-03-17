@@ -3,9 +3,8 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import { Eye, EyeOff, Mail, Lock, Shield } from 'lucide-react'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { useHistory } from 'react-router-dom'
+import { useHistory, Link } from 'react-router-dom'
 import { useLogin, usePassportLogin } from '@/queries/auth/auth'
 import toast from 'react-hot-toast'
 import { Input } from '@/components/ui/input'
@@ -118,7 +117,7 @@ export function SigninForm() {
               />
               <span className="ml-2 text-sm text-foreground">Remember me</span>
             </label> */}
-            <Link href="#" className="text-sm text-accent hover:underline transition-all">
+            <Link to="#" className="text-sm text-accent hover:underline transition-all">
               Forgot password?
             </Link>
           </div>
@@ -139,7 +138,7 @@ export function SigninForm() {
 
         <div className="mt-6 text-center text-sm">
           <span className="text-muted-foreground">Don't have an account? </span>
-          <Link href="/signup" className="text-accent font-semibold hover:underline transition-all">
+          <Link to="/signup" className="text-accent font-semibold hover:underline transition-all">
             Create account
           </Link>
         </div>
@@ -148,11 +147,11 @@ export function SigninForm() {
       <div className="mt-4 text-center text-xs text-muted-foreground">
         <p>
           By signing in, you agree to our{' '}
-          <Link href="#" className="text-accent hover:underline">
+          <Link to="#" className="text-accent hover:underline">
             Terms of Service
           </Link>{' '}
           and{' '}
-          <Link href="#" className="text-accent hover:underline">
+          <Link to="#" className="text-accent hover:underline">
             Privacy Policy
           </Link>
         </p>

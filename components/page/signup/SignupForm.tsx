@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { Eye, EyeOff, Mail, Lock, User, Phone, Home, MapPin, Globe, CheckCircle2, Upload } from 'lucide-react'
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { RegisterFormData, registerSchema } from '@/validation/auth'
 import { useRegisterUser } from '@/queries/auth/auth'
@@ -469,7 +469,7 @@ export function SignupForm() {
 
         <div className="mt-6 text-center text-sm border-t border-border pt-6">
           <span className="text-muted-foreground">Already have an account? </span>
-          <Link href="/signin" className="text-primary font-semibold hover:underline">
+          <Link to="/signin" className="text-primary font-semibold hover:underline">
             Sign in
           </Link>
         </div>

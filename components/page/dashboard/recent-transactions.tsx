@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { ArrowUpRight, ArrowDownLeft } from 'lucide-react'
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 import { useListTransactions } from '@/queries/user/transaction/transaction'
 
 interface TransactionViewModel {
@@ -77,7 +77,7 @@ export function RecentTransactions() {
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-border">
         <h2 className="text-lg font-bold text-foreground">Recent Transactions</h2>
-        <Link href="/transactions" className="text-sm font-semibold text-accent hover:underline">
+        <Link to="/transactions" className="text-sm font-semibold text-accent hover:underline">
           VIEW ALL
         </Link>
       </div>
