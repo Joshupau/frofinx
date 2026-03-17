@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Plus, Download, Filter, MoreHorizontal } from 'lucide-react'
@@ -88,8 +88,11 @@ export function TransactionsPage() {
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
-  const [page, setPage] = useState(0);
-  const [limit, setLimit] = useState(5);
+  const [page, setPage] = useState(0)
+  const [limit, setLimit] = useState(10)
+  const [allTransactions, setAllTransactions] = useState<any[]>([])
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [totalPages, setTotalPages] = useState(1)
 
   const { data: walletsData, isLoading: walletsLoading } = useListWallets();
   const wallets = walletsData?.data
@@ -111,7 +114,7 @@ export function TransactionsPage() {
   const { data: summaryData, isLoading: summaryLoading } = useTransactionsSummary(apiParams);
   
   // Extract transactions and pagination info from API response
-  const transactions = useMemo(() => {
+  const currentPageTransactions = useMemo(() => {
     if (!apiResponse?.data) return [];
     // Handle both array and paginated response formats
     return Array.isArray(apiResponse.data)
@@ -119,8 +122,34 @@ export function TransactionsPage() {
       : apiResponse.data.items || [];
   }, [apiResponse]);
 
-    const totalItems = apiResponse?.data?.totalItems || transactions.length;
-  const totalPages = apiResponse?.data?.totalPages || 1;
+  const totalItems = apiResponse?.data?.totalItems || currentPageTransactions.length;
+  const totalPagesCount = apiResponse?.data?.totalPages || 1;
+
+  // Handle accumulating transactions for infinite scroll
+  useEffect(() => {
+    if (page === 0) {
+      // Reset when filters change
+      setAllTransactions(currentPageTransactions);
+    } else {
+      // Append new transactions
+      setAllTransactions(prev => [...prev, ...currentPageTransactions]);
+      setIsLoadingMore(false);
+    }
+  }, [currentPageTransactions, page]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setPage(0);
+    setAllTransactions([]);
+    setIsLoadingMore(false);
+  }, [filters]);
+
+  const handleLoadMore = () => {
+    if (!isLoadingMore && page + 1 < totalPagesCount) {
+      setIsLoadingMore(true);
+      setPage(prev => prev + 1);
+    }
+  };
 
   // Use summary stats from API
   const stats = {
@@ -220,40 +249,14 @@ export function TransactionsPage() {
 
               {/* Transaction List */}
               <div className="lg:col-span-3">
-                <div className="bg-card border border-border rounded-lg overflow-hidden">
-                  <div className="px-6 py-4 border-b border-border bg-secondary/50">
-                    <h2 className="font-semibold text-foreground">
-                      {transactions.length} Transaction{transactions.length !== 1 ? 's' : ''}
-                    </h2>
-                  </div>
-                  <TransactionList
-                    transactions={transactions}
-                    isLoading={isLoading}
-                    onTransactionClick={setSelectedTransaction}
-                  />
-                  {/* Pagination Controls */}
-                  <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-secondary/50">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page <= 0}
-                      onClick={() => setPage(page - 1)}
-                    >
-                      Previous
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                      Page {page + 1} of {totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page + 1 >= totalPages}
-                      onClick={() => setPage(page + 1)}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
+                <TransactionList
+                  transactions={allTransactions}
+                  isLoading={isLoading && page === 0}
+                  hasMore={page + 1 < totalPagesCount}
+                  isLoadingMore={isLoadingMore}
+                  onTransactionClick={setSelectedTransaction}
+                  onLoadMore={handleLoadMore}
+                />
               </div>
             </div>
           </div>
