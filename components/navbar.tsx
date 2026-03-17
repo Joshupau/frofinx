@@ -76,7 +76,7 @@ export default function DNavbar() {
                   key={item.href}
                   to={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-all duration-300
                       ${
                         active 
                         ? 'bg-primary text-white shadow-sm'
@@ -166,7 +166,7 @@ export default function DNavbar() {
                 key={item.href}
                 onClick={() => go(item.href)}
                 aria-current={isActive(item.href) ? 'page' : undefined}
-                className={`flex items-center gap-3 px-4 py-3 rounded-md text-base font-semibold transition-all duration-200 ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-md text-sm font-semibold transition-all duration-200 ${
                   isActive(item.href)
                     ? 'bg-primary text-primary-foreground shadow-md'
                     : 'text-foreground/70 hover:text-foreground hover:bg-secondary'

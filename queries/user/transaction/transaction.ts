@@ -164,3 +164,16 @@ export const useTransactionTags = () => {
     enabled: true,
   });
 }
+
+const getCharatData = async (params?: quickStatsTransactionParams) => {
+  const response = await axiosInstance.get("/transaction/chart-data", { params });
+  return response.data;
+}
+
+export const useTransactionChartData = (params?: quickStatsTransactionParams) => {
+  return useQuery({
+    queryKey: ["transaction-chart-data", params],
+    queryFn: () => getCharatData(params || { period: 'month' }),
+    enabled: true,
+  });
+}

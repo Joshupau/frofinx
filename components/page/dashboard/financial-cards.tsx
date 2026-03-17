@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { TrendingUp, TrendingDown, Wallet, DollarSign, ShoppingCart, Zap } from 'lucide-react'
 import { useListWallets } from '@/queries/user/wallet/wallets'
-import { useListTransactions, useQuickStats } from '@/queries/user/transaction/transaction'
+import { useListTransactions, useQuickStats, useTransactionChartData } from '@/queries/user/transaction/transaction'
 
 interface FinancialCard {
   title: string
@@ -37,7 +37,7 @@ interface FinancialCardsProps {
 export function FinancialCards({ period = 'month' }: FinancialCardsProps) {
   const { data: walletResponse, isLoading: walletsLoading } = useListWallets()
   const { data: quickStatsResponse, isLoading: quickStatsLoading } = useQuickStats({ period })
-  
+  const { data: chartDataResponse, isLoading: chartDataLoading } = useTransactionChartData({ period, walletId: undefined })
   const cards: FinancialCard[] = useMemo(() => {
     // Calculate total balance from wallets
     let totalBalance = 0

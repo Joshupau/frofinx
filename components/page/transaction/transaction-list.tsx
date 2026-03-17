@@ -92,6 +92,21 @@ export function TransactionList({ transactions, isLoading, hasMore = false, isLo
     return `${prefix}₱${Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
 
+  const calculateDayTotals = (dayTransactions: TransactionItem[]) => {
+    let income = 0
+    let expense = 0
+    
+    dayTransactions.forEach((transaction) => {
+      if (transaction.type === 'income') {
+        income += transaction.amount
+      } else if (transaction.type === 'expense') {
+        expense += transaction.amount
+      }
+    })
+    
+    return { income, expense, net: income - expense }
+  }
+
   const groupTransactionsByDay = (txns: TransactionItem[]) => {
     const grouped: { [key: string]: TransactionItem[] } = {}
     const dateMetadata: { [key: string]: string } = {}
@@ -204,6 +219,21 @@ export function TransactionList({ transactions, isLoading, hasMore = false, isLo
                 </button>
               ))}
             </div>
+
+            {/* Day Total */}
+            {(() => {
+              const { income, expense } = calculateDayTotals(dayTransactions)
+              return (
+                <div className="flex justify-end gap-6 px-2 mt-3 text-sm font-semibold">
+                  <div className="text-right">
+                    <p className="text-success text-sm">+₱{income.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-destructive text-sm">-₱{expense.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         ))}
       </div>
