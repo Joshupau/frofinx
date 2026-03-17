@@ -5,7 +5,7 @@ import { IonContent, IonPage } from '@ionic/react'
 export default function SignUpPage() {
   return (
     <IonPage>
-      <IonContent fullscreen className="bg-background">
+      <IonContent fullscreen className="min-h-screen bg-background">
         <div className="min-h-screen flex flex-col md:flex-row bg-background">
           {/* Branding column (desktop only) */}
           <div className="hidden md:flex md:w-2/5 relative min-h-screen overflow-hidden border-r border-border bg-gradient-to-br from-cyan-100 via-cyan-50 to-blue-50 dark:from-teal-900 dark:via-teal-800 dark:to-slate-900">

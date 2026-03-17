@@ -141,7 +141,7 @@ export function WalletsPage() {
 
   return (
     <IonPage>
-      <IonContent className="bg-background text-foreground">
+      <IonContent className="min-h-screen bg-background text-foreground">
         {/* Main Content */}
         <main className="flex-1">
           {/* Page Header */}

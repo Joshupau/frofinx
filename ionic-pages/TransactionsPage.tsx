@@ -161,7 +161,7 @@ export function TransactionsPage() {
 
   return (
     <IonPage>
-      <IonContent className="bg-background text-foreground">
+      <IonContent fullscreen className="min-h-screen bg-background text-foreground">
 
         {/* Main Content */}
         <main>
@@ -248,7 +248,7 @@ export function TransactionsPage() {
               </div>
 
               {/* Transaction List */}
-              <div className="lg:col-span-3">
+              <div className="lg:col-span-3 overflow-">
                 <TransactionList
                   transactions={allTransactions}
                   isLoading={isLoading && page === 0}

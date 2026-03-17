@@ -29,7 +29,7 @@ export default function DashboardPage() {
 
   return (
     <IonicPage>
-      <IonicContent className="bg-background text-foreground">
+      <IonicContent className="min-h-screen bg-background text-foreground">
         {/* Header */}
 
         {/* Main Content */}
