@@ -20,8 +20,39 @@ import DevErrorOverlay from '@/components/DevErrorOverlay'
 // the repo's configured font stack (Inter + Poppins) to take effect.
 
 export const metadata: Metadata = {
-  title: 'FroFinX',
-  description: 'FroFinX App',
+  title: {
+    template: '%s | FroFinX',
+    default: 'FroFinX - Money Management Made Simple',
+  },
+  description: 'FroFinX is a comprehensive financial management application that helps you track transactions, manage budgets, and take control of your finances.',
+  keywords: ['finance', 'budgeting', 'money-tracking', 'financial-management', 'personal-finance', 'wallet'],
+  authors: [{ name: 'FroFinX Team' }],
+  icons: {
+    icon: '/FroFinXLogoTrans.png',
+    shortcut: '/FroFinXLogoTrans.png',
+    apple: '/FroFinXLogoTrans.png',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    title: 'FroFinX - Money Management Made Simple',
+    description: 'FroFinX is a comprehensive financial management application that helps you track transactions, manage budgets, and take control of your finances.',
+    siteName: 'FroFinX',
+    images: [
+      {
+        url: '/FroFinXLogoTrans.png',
+        width: 1200,
+        height: 630,
+        alt: 'FroFinX Logo',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'FroFinX - Money Management Made Simple',
+    description: 'FroFinX is a comprehensive financial management application that helps you track transactions, manage budgets, and take control of your finances.',
+    images: ['/FroFinXLogoTrans.png'],
+  },
 }
 
 export const viewport: Viewport = {
