@@ -86,7 +86,7 @@ export default function BudgetList() {
       ) : budgets.length > 0 ? (
         <div className="space-y-2">
           {budgets.map((b) => (
-            <div key={b.id} className="p-4 bg-card border border-border rounded">
+            <div key={b.id} className="p-4 bg-gradient-to-br from-card to-secondary border border-border rounded-xl">
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <div className="font-medium">{b.name}</div>
@@ -113,7 +113,7 @@ export default function BudgetList() {
           ))}
         </div>
       ) : (
-        <div className="p-6 bg-card border border-border rounded text-center">
+        <div className="p-6 bg-gradient-to-br from-card to-secondary border border-border rounded-xl text-center">
           <p className="text-muted-foreground mb-4">No budgets found</p>
           <Button size="sm" className="gap-2" onClick={() => setOpen(true)}>
             <Plus className="w-4 h-4" />

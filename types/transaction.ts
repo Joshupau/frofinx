@@ -15,6 +15,7 @@ export type CreateTransactionData = {
   tags?: string[];
   toWalletId?: string;
   billId?: string;
+  serviceFee?: number;
 };
 
 export type ListTransactionsParams = {
@@ -29,6 +30,7 @@ export type ListTransactionsParams = {
   maxAmount?: string;
   search?: string;
   status?: TransactionStatus;
+  tags?: string[];
 };
 
 export type UpdateTransactionData = {

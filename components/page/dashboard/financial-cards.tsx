@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { TrendingUp, TrendingDown, Wallet, DollarSign, ShoppingCart, Zap } from 'lucide-react'
 import { useListWallets } from '@/queries/user/wallet/wallets'
-import { useListTransactions } from '@/queries/user/transaction/transaction'
+import { useListTransactions, useQuickStats } from '@/queries/user/transaction/transaction'
 
 interface FinancialCard {
   title: string
@@ -21,10 +21,23 @@ const colorMap = {
   purple: 'bg-purple-500 dark:bg-purple-600',
 }
 
-export function FinancialCards() {
-  const { data: walletResponse, isLoading: walletsLoading } = useListWallets()
-  const { data: transactionResponse, isLoading: transactionsLoading } = useListTransactions()
+const bgAccentMap = {
+  blue: 'bg-blue-500',
+  green: 'bg-success',
+  orange: 'bg-warning',
+  purple: 'bg-purple-500',
+}
 
+type PeriodType = 'today' | 'week' | 'month' | 'year' | 'all'
+
+interface FinancialCardsProps {
+  period?: PeriodType
+}
+
+export function FinancialCards({ period = 'month' }: FinancialCardsProps) {
+  const { data: walletResponse, isLoading: walletsLoading } = useListWallets()
+  const { data: quickStatsResponse, isLoading: quickStatsLoading } = useQuickStats({ period })
+  
   const cards: FinancialCard[] = useMemo(() => {
     // Calculate total balance from wallets
     let totalBalance = 0
@@ -40,24 +53,13 @@ export function FinancialCards() {
       }, 0)
     }
 
-    // Calculate income and expenses from transactions
-    let totalIncome = 0
-    let totalExpense = 0
-    const transactionData = transactionResponse?.data as any
-    const transactions = Array.isArray(transactionData)
-      ? transactionData
-      : transactionData?.items || transactionData?.transactions || []
-
-    if (Array.isArray(transactions)) {
-      transactions.forEach((t: any) => {
-        const amount = Number(t.amount || 0)
-        if (t.type === 'income') {
-          totalIncome += amount
-        } else if (t.type === 'expense') {
-          totalExpense += amount
-        }
-      })
-    }
+    // Extract data from quick stats
+    const stats = quickStatsResponse?.data?.stats || {}
+    const spentToday = quickStatsResponse?.data?.spentToday || {}
+    const income = Number(stats.income || 0)
+    const expenses = Number(stats.expenses || 0)
+    const totalSpent = Number(spentToday.totalSpent || 0)
+    const transactionCount = Number(stats.transactions || 0)
 
     return [
       {
@@ -69,31 +71,31 @@ export function FinancialCards() {
         isLoading: walletsLoading,
       },
       {
-        title: 'Income',
-        amount: `₱${totalIncome.toFixed(2)}`,
+        title: 'Spent Today',
+        amount: `₱${totalSpent.toFixed(2)}`,
         change: 8.2,
         icon: <TrendingUp className="w-6 h-6" />,
         color: 'green',
-        isLoading: transactionsLoading,
+        isLoading: quickStatsLoading,
       },
       {
         title: 'Expenses',
-        amount: `₱${totalExpense.toFixed(2)}`,
+        amount: `₱${expenses.toFixed(2)}`,
         change: -4.3,
         icon: <ShoppingCart className="w-6 h-6" />,
         color: 'orange',
-        isLoading: transactionsLoading,
+        isLoading: quickStatsLoading,
       },
       {
-        title: 'Investments',
-        amount: `₱32,940.00`,
+        title: 'Transactions',
+        amount: `${transactionCount}`,
         change: 23.1,
         icon: <Zap className="w-6 h-6" />,
         color: 'purple',
-        isLoading: false,
+        isLoading: quickStatsLoading,
       },
     ]
-  }, [walletResponse, transactionResponse, walletsLoading, transactionsLoading])
+  }, [walletResponse, quickStatsResponse, walletsLoading, quickStatsLoading])
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -102,8 +104,10 @@ export function FinancialCards() {
         return (
           <div
             key={index}
-            className="bg-card border border-border rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all duration-300 group"
+            className="bg-gradient-to-br from-card to-secondary border border-border rounded-xl p-6 hover:shadow-lg hover:scale-105 transition-all duration-300 group relative overflow-hidden"
           >
+            {/* Background accent */}
+            <div className={`absolute -top-12 -right-12 w-40 h-40 rounded-full opacity-10 blur-3xl ${bgAccentMap[card.color]}`} />
             {/* Header with Icon */}
             <div className="flex items-start justify-between mb-4">
               <div className={`${colorMap[card.color]} p-3 rounded-lg text-white group-hover:shadow-lg transition-shadow`}>

@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { X, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useCreateTransaction } from '@/queries/user/transaction/transaction'
+import { useCreateTransaction, useTransactionTags } from '@/queries/user/transaction/transaction'
 import { useListWallets } from '@/queries/user/wallet/wallets'
 import { useListCategories } from '@/queries/user/category/categories'
 import { CreateTransactionData } from '@/types/transaction'
@@ -32,13 +32,29 @@ export function CreateTransactionModal({
     walletId: initialWalletId,
     amount: 0,
     description: '',
+    tags: [],
   })
+  const [newTag, setNewTag] = useState('')
+  const [includeServiceFee, setIncludeServiceFee] = useState(false)
+  const [serviceFee, setServiceFee] = useState(0)
 
-  console.log(initialWalletId, initialType)
 
   const { mutate: createTransaction, isPending } = useCreateTransaction()
   const { data: walletsResponse } = useListWallets()
   const { data: categoriesResponse } = useListCategories()
+  const { data: tagsResponse } = useTransactionTags()
+
+  // Extract available tags
+  let availableTags: string[] = []
+  if (tagsResponse) {
+    if (Array.isArray(tagsResponse)) {
+      availableTags = tagsResponse
+    } else if (Array.isArray((tagsResponse as any).tags)) {
+      availableTags = (tagsResponse as any).tags
+    } else if (Array.isArray((tagsResponse as any).data?.tags)) {
+      availableTags = (tagsResponse as any).data.tags
+    }
+  }
 
   // Extract wallets and categories from API responses
   const wallets = walletsResponse?.data ? 
@@ -55,6 +71,27 @@ export function CreateTransactionModal({
       ...prev,
       [name]: type === 'number' ? parseFloat(value) : value,
     }))
+  }
+
+  const toggleTag = (tag: string) => {
+    setFormData(prev => {
+      const current = prev.tags || []
+      const exists = current.includes(tag)
+      return {
+        ...prev,
+        tags: exists ? current.filter(t => t !== tag) : [...current, tag]
+      }
+    })
+  }
+
+  const addNewTag = () => {
+    if (newTag.trim() && !(formData.tags || []).includes(newTag)) {
+      setFormData(prev => ({
+        ...prev,
+        tags: [...(prev.tags || []), newTag]
+      }))
+      setNewTag('')
+    }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -74,14 +111,25 @@ export function CreateTransactionModal({
       return
     }
 
-    createTransaction(formData as CreateTransactionData, {
+    // Prepare submission data with service fee if included
+    const submissionData = {
+      ...formData,
+      tags: formData.tags || [],
+      ...(includeServiceFee && serviceFee > 0 && { serviceFee }),
+    } as CreateTransactionData
+
+    createTransaction(submissionData, {
       onSuccess: () => {
         toast.success('Transaction created successfully!')
         setFormData({
           type: 'expense',
           amount: 0,
           description: '',
+          tags: [],
         })
+        setIncludeServiceFee(false)
+        setServiceFee(0)
+        setNewTag('')
         onClose()
         onSuccess?.()
       },
@@ -110,116 +158,152 @@ export function CreateTransactionModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Wallet Selection */}
-          <div className="space-y-2">
-            <label htmlFor="walletId" className="text-sm font-medium text-foreground block">
-              Wallet *
-            </label>
-            <select
-              id="walletId"
-              name="walletId"
-              value={formData.walletId || ''}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-            >
-              <option value="">Select a wallet</option>
-              {wallets.map((wallet: any) => (
-                <option key={wallet._id || wallet.id} value={wallet._id || wallet.id}>
-                  {wallet.name} ({wallet.currency || 'USD'})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Type Selection */}
-          <div className="space-y-2">
-            <label htmlFor="type" className="text-sm font-medium text-foreground block">
-              Type *
-            </label>
-            <select
-              id="type"
-              name="type"
-              value={formData.type || 'expense'}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-            >
-              <option value="income">Income</option>
-              <option value="expense">Expense</option>
-              <option value="transfer">Transfer</option>
-            </select>
-          </div>
-
-          {/* Category Selection */}
-          {formData.type !== 'transfer' && (
+          {/* Wallet + Type Row */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Wallet Selection */}
             <div className="space-y-2">
-              <label htmlFor="categoryId" className="text-sm font-medium text-foreground block">
-                Category
+              <label htmlFor="walletId" className="text-sm font-medium text-foreground block">
+                Wallet *
               </label>
               <select
-                id="categoryId"
-                name="categoryId"
-                value={formData.categoryId || ''}
+                id="walletId"
+                name="walletId"
+                value={formData.walletId || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
               >
-                <option value="">Select a category</option>
-                {categories.map((category: any) => (
-                  <option key={category._id || category.id} value={category._id || category.id}>
-                    {category.name}
+                <option value="">Select a wallet</option>
+                {wallets.map((wallet: any) => (
+                  <option key={wallet._id || wallet.id} value={wallet._id || wallet.id}>
+                    {wallet.name}
                   </option>
                 ))}
               </select>
             </div>
+
+            {/* Type Selection */}
+            <div className="space-y-2">
+              <label htmlFor="type" className="text-sm font-medium text-foreground block">
+                Type *
+              </label>
+              <select
+                id="type"
+                name="type"
+                value={formData.type || 'expense'}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
+              >
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+                <option value="transfer">Transfer</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Category + Amount Row */}
+          <div className={`grid gap-3 ${formData.type === 'transfer' ? 'grid-cols-1' : 'grid-cols-2'}`}>
+            {/* Category Selection */}
+            {formData.type !== 'transfer' && (
+              <div className="space-y-2">
+                <label htmlFor="categoryId" className="text-sm font-medium text-foreground block">
+                  Category
+                </label>
+                <select
+                  id="categoryId"
+                  name="categoryId"
+                  value={formData.categoryId || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((category: any) => (
+                    <option key={category._id || category.id} value={category._id || category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Amount */}
+            <div className="space-y-2">
+              <label htmlFor="amount" className="text-sm font-medium text-foreground block">
+                Amount *
+              </label>
+              <Input
+                id="amount"
+                type="number"
+                name="amount"
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                value={formData.amount || ''}
+                onChange={handleChange}
+                className="w-full text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Date + Service Fee Row */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Date */}
+            <div className="space-y-2">
+              <label htmlFor="date" className="text-sm font-medium text-foreground block">
+                Date
+              </label>
+              <Input
+                id="date"
+                type="date"
+                name="date"
+                value={formData.date || ''}
+                onChange={handleChange}
+                className="w-full text-sm"
+              />
+            </div>
+
+            {/* Service Fee Checkbox */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground block">
+                Service Fee
+              </label>
+              <input
+                type="checkbox"
+                id="includeServiceFee"
+                checked={includeServiceFee}
+                onChange={(e) => setIncludeServiceFee(e.target.checked)}
+                className="w-4 h-4 rounded border border-border bg-input cursor-pointer accent-primary mt-2"
+              />
+            </div>
+          </div>
+
+          {/* Service Fee Amount (if enabled) */}
+          {includeServiceFee && (
+            <div className="space-y-2 bg-secondary/30 rounded-lg p-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="serviceFee" className="text-xs font-medium text-foreground block mb-1">
+                    Fee Amount
+                  </label>
+                  <Input
+                    id="serviceFee"
+                    type="number"
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                    value={serviceFee || ''}
+                    onChange={(e) => setServiceFee(parseFloat(e.target.value) || 0)}
+                    className="w-full text-sm"
+                  />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-foreground mb-1">Total</p>
+                  <div className="px-3 py-2 rounded-lg bg-background border border-border text-sm font-semibold text-foreground">
+                    {((formData.amount || 0) + serviceFee).toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
-
-          {/* Amount */}
-          <div className="space-y-2">
-            <label htmlFor="amount" className="text-sm font-medium text-foreground block">
-              Amount *
-            </label>
-            <Input
-              id="amount"
-              type="number"
-              name="amount"
-              placeholder="0.00"
-              step="0.01"
-              min="0"
-              value={formData.amount || ''}
-              onChange={handleChange}
-              className="w-full"
-            />
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <label htmlFor="description" className="text-sm font-medium text-foreground block">
-              Description *
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              placeholder="Enter transaction details..."
-              value={formData.description || ''}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-border rounded-lg bg-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all resize-none"
-              rows={3}
-            />
-          </div>
-
-          {/* Date */}
-          <div className="space-y-2">
-            <label htmlFor="date" className="text-sm font-medium text-foreground block">
-              Date
-            </label>
-            <Input
-              id="date"
-              type="date"
-              name="date"
-              value={formData.date || ''}
-              onChange={handleChange}
-              className="w-full"
-            />
-          </div>
 
           {/* To Wallet (for transfers) */}
           {formData.type === 'transfer' && (
@@ -232,7 +316,7 @@ export function CreateTransactionModal({
                 name="toWalletId"
                 value={formData.toWalletId || ''}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm"
               >
                 <option value="">Select destination wallet</option>
                 {wallets.map((wallet: any) => (
@@ -245,6 +329,77 @@ export function CreateTransactionModal({
               </select>
             </div>
           )}
+
+          {/* Description */}
+          <div className="space-y-2">
+            <label htmlFor="description" className="text-sm font-medium text-foreground block">
+              Description *
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              placeholder="Enter transaction details..."
+              value={formData.description || ''}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-border rounded-lg bg-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all resize-none text-sm"
+              rows={2}
+            />
+          </div>
+
+          {/* Tags */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground block">
+              Tags
+            </label>
+            <div className="flex flex-wrap gap-1 mb-2">
+              {(formData.tags || []).map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => toggleTag(tag)}
+                  className="px-2 py-1 rounded-full bg-primary text-primary-foreground text-xs font-medium flex items-center gap-1 hover:bg-primary/80 transition-colors"
+                >
+                  {tag}
+                  <X className="w-3 h-3" />
+                </button>
+              ))}
+            </div>
+            {availableTags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-2">
+                {availableTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => toggleTag(tag)}
+                    className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
+                      (formData.tags || []).includes(tag)
+                        ? 'bg-primary/20 text-primary'
+                        : 'bg-secondary text-foreground hover:bg-secondary/80'
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <Input
+                type="text"
+                placeholder="Add new tag..."
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addNewTag())}
+                className="flex-1 text-sm"
+              />
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={addNewTag}
+                className="gap-1"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
         </form>
 
         {/* Footer */}

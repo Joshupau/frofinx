@@ -22,6 +22,7 @@ interface TransactionListProps {
 }
 
 export function TransactionList({ transactions, isLoading, onTransactionClick }: TransactionListProps) {
+  
   const getIcon = (type: string) => {
     switch (type) {
       case 'income':

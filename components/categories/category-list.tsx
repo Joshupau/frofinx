@@ -95,7 +95,7 @@ export default function CategoryList() {
           {categories.map((c) => (
             <div
               key={c.id}
-              className="p-3 bg-card border border-border rounded flex justify-between items-center hover:bg-secondary/50 transition"
+              className="p-3 bg-gradient-to-br from-card to-secondary border border-border rounded-xl flex justify-between items-center hover:shadow-md transition-all duration-300"
             >
               <div className="flex items-center gap-3">
                 {c.color && (

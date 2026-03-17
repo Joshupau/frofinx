@@ -1,7 +1,7 @@
 
+import { useState } from 'react'
 import { DashboardHeader } from '@/components/page/dashboard/dashboard-header'
 import { FinancialCards } from '@/components/page/dashboard/financial-cards'
-import { QuickActions } from '@/components/page/dashboard/quick-actions'
 import { RecentTransactions } from '@/components/page/dashboard/recent-transactions'
 
 import { IonPage, IonContent } from '@ionic/react'
@@ -14,23 +14,54 @@ function IonicContent({ children, className = '' }: { children: React.ReactNode;
   return <IonContent className={className}>{children}</IonContent>
 }
 
+type PeriodType = 'today' | 'week' | 'month' | 'year' | 'all'
+
 export default function DashboardPage() {
+  const [period, setPeriod] = useState<PeriodType>('month')
+
+  const periodOptions: { label: string; value: PeriodType }[] = [
+    { label: 'Today', value: 'today' },
+    { label: 'Week', value: 'week' },
+    { label: 'Month', value: 'month' },
+    { label: 'Year', value: 'year' },
+    { label: 'All Time', value: 'all' },
+  ]
+
   return (
     <IonicPage>
-      <IonicContent className="min-h-screen bg-background text-foreground transition-colors duration-300">
+      <IonicContent className="bg-background text-foreground">
         {/* Header */}
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Welcome Section */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back! Here's your financial overview.</p>
+          {/* Welcome Section with Filter */}
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard</h1>
+              <p className="text-muted-foreground">Welcome back! Here's your financial overview.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="period-filter" className="text-sm font-medium text-muted-foreground">
+                Period:
+              </label>
+              <select
+                id="period-filter"
+                value={period}
+                onChange={(e) => setPeriod(e.target.value as PeriodType)}
+                className="px-3 py-2 rounded-lg bg-card border border-border text-foreground text-sm font-medium hover:border-foreground/50 transition-colors cursor-pointer"
+              >
+                {periodOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Financial Cards */}
           <div className="mb-8">
-            <FinancialCards />
+            <FinancialCards period={period} />
           </div>
 
           {/* Main Content Grid */}
@@ -40,10 +71,7 @@ export default function DashboardPage() {
               <RecentTransactions />
             </div>
 
-            {/* Quick Actions - Takes 1 column */}
-            <div className="lg:col-span-1">
-              <QuickActions />
-            </div>
+
           </div>
         </main>
       </IonicContent>

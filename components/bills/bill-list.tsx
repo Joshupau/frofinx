@@ -99,7 +99,7 @@ export default function BillList() {
       ) : bills.length > 0 ? (
         <div className="space-y-2">
           {bills.map((b) => (
-            <div key={b.id} className="p-3 bg-card border border-border rounded flex justify-between items-center hover:bg-secondary/50 transition">
+            <div key={b.id} className="p-4 bg-gradient-to-br from-card to-secondary border border-border rounded-xl flex justify-between items-center hover:shadow-md transition-all duration-300">
               <div>
                 <div className="font-medium">{b.name}</div>
                 <div className="text-sm text-muted-foreground">Due {b.dueDate}</div>
@@ -124,7 +124,7 @@ export default function BillList() {
           ))}
         </div>
       ) : (
-        <div className="p-6 bg-card border border-border rounded text-center">
+        <div className="p-6 bg-gradient-to-br from-card to-secondary border border-border rounded-xl text-center">
           <p className="text-muted-foreground mb-4">No bills found</p>
           <Button size="sm" className="gap-2" onClick={() => setShowCreateModal(true)}>
             <Plus className="w-4 h-4" />

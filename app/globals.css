@@ -1,10 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #FFFFFF;
+  --background: #F1F5F9;
   --foreground: #0F1419;
   --card: #FFFFFF;
   --card-foreground: #0F1419;
@@ -12,15 +13,15 @@
   --popover-foreground: #0F1419;
   --primary: #0066CC;
   --primary-foreground: #FFFFFF;
-  --secondary: #F5F7FA;
+  --secondary: #E2E8F0;
   --secondary-foreground: #0F1419;
-  --muted: #E8ECEF;
+  --muted: #CBD5E1;
   --muted-foreground: #6B7280;
   --accent: #00D9CC;
   --accent-foreground: #0F1419;
   --destructive: #FF6B35;
   --destructive-foreground: #FFFFFF;
-  --border: #E5E7EB;
+  --border: #CBD5E1;
   --input: #FFFFFF;
   --ring: #0066CC;
   --success: #2ECC71;
@@ -67,8 +68,9 @@
 }
 
 @theme inline {
-  --font-sans: 'Geist', 'Geist Fallback';
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  --font-heading: 'Poppins', 'Inter', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -115,17 +117,42 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground transition-colors duration-300;
+  
+  html, body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
   }
-  html {
-    scroll-behavior: smooth;
-  }
-  /* Override Ionic's global anchor styling to allow Tailwind classes to take precedence */
+
   a {
     color: inherit;
   }
 }
+
+/* Override animation duration */
+@media (prefers-reduced-motion: no-preference) {
+  * {
+    animation-duration: 300ms;
+  }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+html {
+  scroll-behavior: smooth;
+}
+
+/* Force all elements to transition simultaneously during theme switch */
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition-property: background-color, border-color, color, fill, stroke !important;
+  transition-duration: 300ms !important;
+  transition-timing-function: ease !important;
+  transition-delay: 0ms !important;
+}
+
 
 @layer components {
   .animate-fade-in {

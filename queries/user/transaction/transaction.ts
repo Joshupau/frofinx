@@ -151,3 +151,16 @@ export const useQuickStats = (params?: quickStatsTransactionParams) => {
     enabled: true,
   });
 }
+
+const getTransactionTags = async () => {
+  const response = await axiosInstance.get("/transaction/tags");
+  return response.data;
+}
+
+export const useTransactionTags = () => {
+  return useQuery({
+    queryKey: ["transaction-tags"],
+    queryFn: () => getTransactionTags(),
+    enabled: true,
+  });
+}

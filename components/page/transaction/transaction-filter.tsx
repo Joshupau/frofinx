@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { Search, X, ChevronDown } from 'lucide-react'
+import { Check } from 'lucide-react'
+import { useTransactionTags } from '@/queries/user/transaction/transaction'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -14,6 +16,7 @@ import {
 
 interface TransactionFiltersProps {
   onFilterChange: (filters: FilterState) => void
+  wallets?: { id: string; name?: string }[]
 }
 
 export interface FilterState {
@@ -21,13 +24,16 @@ export interface FilterState {
   status?: 'completed' | 'pending' | 'cancelled' | 'all'
   search?: string
   dateRange?: 'today' | 'week' | 'month' | 'year' | 'all'
+  walletId?: string
+  tags?: string[]
 }
 
-export function TransactionFilters({ onFilterChange }: TransactionFiltersProps) {
+export function TransactionFilters({ onFilterChange, wallets }: TransactionFiltersProps) {
   const [filters, setFilters] = useState<FilterState>({
     type: 'all',
     status: 'all',
     dateRange: 'month',
+    walletId: '',
     search: '',
   })
 
@@ -42,19 +48,49 @@ export function TransactionFilters({ onFilterChange }: TransactionFiltersProps) 
       type: 'all',
       status: 'all',
       dateRange: 'month',
+      walletId: '',
       search: '',
+      tags: [],
     })
     onFilterChange({
       type: 'all',
       status: 'all',
       dateRange: 'month',
+      walletId: '',
       search: '',
+      tags: [],
     })
   }
 
   const activeFilters = Object.entries(filters).filter(
     ([key, value]) => value && value !== 'all' && value !== ''
   ).length
+
+  // Fetch available tags
+  const { data: tagsResponse } = useTransactionTags()
+  // Normalize possible response shapes:
+  // - ['tag1','tag2']
+  // - { tags: [...] }
+  // - { data: { tags: [...] } }
+  let availableTags: string[] = []
+  if (!tagsResponse) {
+    availableTags = []
+  } else if (Array.isArray(tagsResponse)) {
+    availableTags = tagsResponse
+  } else if (Array.isArray((tagsResponse as any).tags)) {
+    availableTags = (tagsResponse as any).tags
+  } else if (Array.isArray((tagsResponse as any).data)) {
+    availableTags = (tagsResponse as any).data
+  } else if (Array.isArray((tagsResponse as any).data?.tags)) {
+    availableTags = (tagsResponse as any).data.tags
+  }
+
+  const toggleTag = (tag: string) => {
+    const current = filters.tags || []
+    const exists = current.includes(tag)
+    const updated = exists ? current.filter((t) => t !== tag) : [...current, tag]
+    handleFilterChange({ tags: updated })
+  }
 
   return (
     <div className="space-y-4">
@@ -80,6 +116,29 @@ export function TransactionFilters({ onFilterChange }: TransactionFiltersProps) 
 
       {/* Filter Buttons */}
       <div className="flex flex-wrap gap-2">
+        {/* Wallet Filter */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2">
+              {filters.walletId && filters.walletId !== ''
+                ? `Wallet (${wallets?.find((w) => w.id === filters.walletId)?.name || filters.walletId})`
+                : 'All Wallets'}
+              <ChevronDown className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuLabel>Wallet</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => handleFilterChange({ walletId: '' })}>
+              All Wallets
+            </DropdownMenuItem>
+            {wallets?.map((w) => (
+              <DropdownMenuItem key={w.id} onClick={() => handleFilterChange({ walletId: w.id })}>
+                {w.name || w.id}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         {/* Type Filter */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -160,7 +219,32 @@ export function TransactionFilters({ onFilterChange }: TransactionFiltersProps) 
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-
+        {/* Tags Filter */}
+        <div className="w-full">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2 w-full justify-between">
+                {filters.tags && filters.tags.length > 0 ? `Tags (${filters.tags.length})` : 'Tags'}
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuLabel>Transaction Tags</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleFilterChange({ tags: [] })}>
+                Clear Tags
+              </DropdownMenuItem>
+              {availableTags.map((t) => (
+                <DropdownMenuItem key={t} onClick={() => toggleTag(t)}>
+                  <div className="flex items-center gap-2">
+                    <Check className={`w-4 h-4 ${filters.tags?.includes(t) ? 'opacity-100' : 'opacity-0'}`} />
+                    <span>{t}</span>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
         {/* Reset Button */}
         {activeFilters > 0 && (
           <Button

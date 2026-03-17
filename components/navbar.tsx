@@ -46,13 +46,13 @@ export default function DNavbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-background border-b border-border transition-colors duration-300">
+    <header className="sticky top-0 z-40 bg-background border-b border-border transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-3">
+        <div className="flex items-center justify-between h-14 gap-3">
           {/* Logo / brand */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
-              className="lg:hidden p-2 rounded-md hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+              className="lg:hidden p-2 rounded-md hover:bg-secondary  text-muted-foreground hover:text-foreground"
               aria-label="Toggle menu"
               onClick={() => setShowMobileMenu((v) => !v)}
             >
@@ -76,10 +76,10 @@ export default function DNavbar() {
                   key={item.href}
                   to={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300
                       ${
                         active 
-                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        ? 'bg-primary text-white shadow-sm'
                         : 'text-muted-foreground hover:text-foreground hover:bg-secondary '
                       }
                     `}
@@ -151,15 +151,22 @@ export default function DNavbar() {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation Overlay */}
         {showMobileMenu && (
-          <nav className="lg:hidden pb-4 border-t border-border pt-2 flex flex-col gap-1">
+          <nav className="lg:hidden fixed inset-0 top-14 left-0 right-0 bottom-0 bg-background/95 backdrop-blur z-50 p-4 flex flex-col gap-1 overflow-y-auto">
+            {/* Close button */}
+            <button
+              onClick={() => setShowMobileMenu(false)}
+              className="absolute top-4 right-4 p-2 rounded-md hover:bg-secondary transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
             {navItems.map((item) => (
               <button
                 key={item.href}
                 onClick={() => go(item.href)}
                 aria-current={isActive(item.href) ? 'page' : undefined}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-semibold transition-all duration-200 ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-md text-base font-semibold transition-all duration-200 ${
                   isActive(item.href)
                     ? 'bg-primary text-primary-foreground shadow-md'
                     : 'text-foreground/70 hover:text-foreground hover:bg-secondary'

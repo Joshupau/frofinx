@@ -3,10 +3,9 @@
 import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { Route, Redirect, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
 import Providers from '@/queries/query-provider';
-import { useThemeStore } from '@/store/theme-store';
 import Navbar from '@/components/navbar';
+import { FloatingAgent } from '@/components/floating-agent';
 
 import SignInPage from '@/ionic-pages/SignInPage';
 import SignUpPage from '@/ionic-pages/SignUpPage';
@@ -21,16 +20,6 @@ import { WalletsPage } from '@/ionic-pages/WalletsPage';
 setupIonicReact({
   mode: 'md', // Use Material Design by default, auto-switches on iOS
 });
-
-function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const { isDarkMode } = useThemeStore();
-
-  useEffect(() => {
-    document.body.classList.toggle('dark', isDarkMode);
-  }, [isDarkMode]);
-
-  return <>{children}</>;
-}
 
 function AppShellInner() {
   const location = useLocation();
@@ -55,6 +44,7 @@ function AppShellInner() {
           </Route>
         </IonRouterOutlet>
       </div>
+      {!hideNav && <FloatingAgent />}
     </div>
   );
 }
@@ -62,13 +52,11 @@ function AppShellInner() {
 export default function AppShell() {
   return (
     <Providers>
-      <ThemeProvider>
-        <IonApp>
-          <IonReactRouter>
-            <AppShellInner />
-          </IonReactRouter>
-        </IonApp>
-      </ThemeProvider>
+      <IonApp>
+        <IonReactRouter>
+          <AppShellInner />
+        </IonReactRouter>
+      </IonApp>
     </Providers>
   );
 }

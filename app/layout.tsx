@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import DevOverlayClient from '@/components/DevOverlayClient'
 import InitialLoader from '@/components/InitialLoader'
@@ -17,7 +16,8 @@ import '@ionic/react/css/core.css'
 
 import './globals.css'
 import DevErrorOverlay from '@/components/DevErrorOverlay'
-const inter = Inter({ subsets: ['latin'] })
+// Using global fonts from `globals.css` instead of next/font to allow
+// the repo's configured font stack (Inter + Poppins) to take effect.
 
 export const metadata: Metadata = {
   title: 'FroFinX',
@@ -41,7 +41,7 @@ export default function RootLayout({
     // document before React hydrates, causing spurious mismatch errors.
     // This tells React to ignore attribute mismatches here.
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} font-sans antialiased`}>
+      <body className="font-sans antialiased">
         {/* Server-rendered initial loader — will be removed by `InitialLoader` on client mount */}
         <div id="app-loading" style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', zIndex: 9999 }}>
           <svg width="56" height="56" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" aria-hidden>
@@ -55,17 +55,17 @@ export default function RootLayout({
         {process.env.NODE_ENV === 'development' && (
           <>
             {/* Dev overlay to show client runtime errors (visible only in development) */}
-            <DevOverlayClient />
+            {/* <DevOverlayClient /> */}
             {/* DEBUG: temporary visible marker to verify server-rendered HTML */}
-            <div style={{ position: 'fixed', top: 8, right: 8, background: '#ff0', color: '#000', padding: '6px 8px', zIndex: 9999, borderRadius: 4 }}>SSR OK</div>
-            <DevDomGuard />
+            {/* <div style={{ position: 'fixed', top: 8, right: 8, background: '#ff0', color: '#000', padding: '6px 8px', zIndex: 9999, borderRadius: 4 }}>SSR OK</div> */}
+            {/* <DevDomGuard /> */}
           </>
         )}
         <InitialLoader />
         {children}
       </body>
-      <Script type="module" src="https://unpkg.com/ionicons@7.0.0/dist/ionicons/ionicons.esm.js" strategy="lazyOnload" />
-      <Script noModule src="https://unpkg.com/ionicons@7.0.0/dist/ionicons/ionicons.js" strategy="lazyOnload" />
+      {/* <Script type="module" src="https://unpkg.com/ionicons@7.0.0/dist/ionicons/ionicons.esm.js" strategy="lazyOnload" /> */}
+      {/* <Script noModule src="https://unpkg.com/ionicons@7.0.0/dist/ionicons/ionicons.js" strategy="lazyOnload" /> */}
     </html>
   )
 }
