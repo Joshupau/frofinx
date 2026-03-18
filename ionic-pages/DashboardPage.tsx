@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Check } from 'lucide-react'
 
 import { IonPage, IonContent } from '@ionic/react'
+import { BillCalendarCard } from '@/components/page/dashboard/bill-calendar-card'
 
 function IonicPage({ children }: { children: React.ReactNode }) {
   return <IonPage>{children}</IonPage>
@@ -24,7 +25,6 @@ export default function DashboardPage() {
   const [period, setPeriod] = useState<PeriodType>('month')
   const [walletId, setWalletId] = useState<string>('')
   const { data: walletsResponse } = useListWallets()
-
   const periodOptions: { label: string; value: PeriodType }[] = [
     { label: 'Today', value: 'today' },
     { label: 'Week', value: 'week' },
@@ -140,9 +140,12 @@ export default function DashboardPage() {
           </div>
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 gap-6">
-            <div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+            <div className="lg:col-span-2 min-h-[280px]">
               <RecentTransactions />
+            </div>
+            <div className="lg:col-span-1">
+              <BillCalendarCard />
             </div>
           </div>
         </main>

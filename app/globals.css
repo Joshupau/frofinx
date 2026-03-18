@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -170,4 +171,344 @@ html.theme-switching *::after {
   .input-focus {
     @apply focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200;
   }
+}
+
+.bill-calendar-wrap {
+  height: 100%;
+  min-height: 0;
+}
+
+.bill-calendar-wrap .rbc-calendar {
+  background: transparent;
+  color: var(--foreground);
+  height: 100%;
+  min-height: 0;
+}
+
+.bill-calendar-wrap .rbc-toolbar {
+  margin-bottom: 0.75rem;
+  display: none;
+}
+
+.bill-calendar-wrap .rbc-toolbar button {
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 12px;
+  border-radius: 8px;
+  padding: 4px 10px;
+}
+
+.bill-calendar-wrap .rbc-toolbar button:hover,
+.bill-calendar-wrap .rbc-toolbar button:focus,
+.bill-calendar-wrap .rbc-toolbar button.rbc-active {
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+}
+
+.bill-calendar-wrap .rbc-month-view,
+.bill-calendar-wrap .rbc-time-view,
+.bill-calendar-wrap .rbc-agenda-view table.rbc-agenda-table {
+  border: none;
+  overflow: visible;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.25rem; /* gap-1 spacing */
+}
+
+.bill-calendar-wrap .rbc-month-header {
+  border: none !important;
+  display: flex !important;
+  gap: 0.25rem;
+}
+
+.bill-calendar-wrap .rbc-header {
+  border: none !important;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  padding: 4px 0;
+  flex: 1;
+}
+
+.bill-calendar-wrap .rbc-month-row {
+  border: none !important;
+  display: flex !important;
+  flex: 1;
+  gap: 0.25rem;
+  overflow: visible;
+  position: relative; /* Ensure it contains absolute children */
+}
+
+.bill-calendar-wrap .rbc-row-content {
+  position: relative; /* Changed from absolute to relative */
+  z-index: 2;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.bill-calendar-wrap .rbc-row-bg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: 0.25rem;
+  z-index: 1;
+}
+
+.bill-calendar-wrap .rbc-row {
+  flex: 1;
+  display: flex;
+  gap: 0.25rem;
+  height: 100%;
+}
+
+.bill-calendar-wrap .rbc-row-segment {
+  flex: 1;
+  padding: 0 !important;
+  display: flex !important;
+}
+
+.bill-calendar-wrap .rbc-day-bg {
+  border: none !important;
+  background: transparent; /* Empty state: transparent */
+  border-radius: 8px;
+  flex: 1;
+  transition: all 0.2s ease;
+}
+
+/* Texture for days WITH content or being Today */
+.bill-calendar-wrap .rbc-month-row:has(.rbc-event) .rbc-day-bg,
+.bill-calendar-wrap .rbc-day-bg.rbc-today {
+  background: color-mix(in srgb, var(--muted) 25%, transparent);
+}
+
+.bill-calendar-wrap .rbc-day-bg:hover {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.bill-calendar-wrap .rbc-today {
+  background: color-mix(in srgb, var(--primary) 8%, transparent) !important;
+  box-shadow: inset 0 0 0 2px var(--primary), 0 0 15px color-mix(in srgb, var(--primary) 30%, transparent) !important;
+  z-index: 2;
+}
+
+.bill-calendar-wrap .rbc-off-range-bg {
+  background: transparent;
+  opacity: 0.15;
+}
+
+.bill-calendar-wrap .rbc-date-cell {
+  padding: 4px 8px !important;
+  text-align: right; /* Top Right positioning */
+  z-index: 3;
+  pointer-events: none;
+  flex: 1;
+}
+
+.bill-calendar-wrap .rbc-date-cell > a {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--muted-foreground);
+  opacity: 0.6;
+}
+
+.bill-calendar-wrap .rbc-date-cell.rbc-now > a {
+  color: var(--primary);
+  font-weight: 800;
+  opacity: 1;
+}
+
+.bill-calendar-wrap .rbc-event {
+  overflow: visible;
+  padding: 0;
+  border: none;
+  background: transparent;
+  width: 100%;
+  height: 100%;
+}
+
+.bill-event-shell {
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 6px !important;
+  border: none !important;
+}
+
+.bill-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.bill-badge-overdue {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
+.bill-badge-upcoming {
+  background: #f59e0b; /* Amber/Orange */
+  color: white;
+}
+
+.bill-badge-paid {
+  background: var(--success);
+  color: white;
+}
+
+.bill-badge-amount {
+  font-family: monospace;
+}
+
+.bill-event {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+}
+
+.bill-event-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+}
+
+.bill-event-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bill-event-amount {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--destructive);
+}
+
+.bill-event-amount-paid {
+  color: var(--success);
+}
+
+.bill-event-hovercard {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  width: 220px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  background: var(--card);
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  display: none;
+  z-index: 40;
+}
+
+.bill-event-shell:hover .bill-event-hovercard {
+  display: block;
+}
+
+.bill-hover-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-bottom: 8px;
+}
+
+.bill-hover-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  row-gap: 6px;
+  column-gap: 8px;
+  margin-bottom: 8px;
+}
+
+.bill-hover-label {
+  font-size: 10px;
+  color: var(--muted-foreground);
+}
+
+.bill-hover-value {
+  font-size: 11px;
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.bill-hover-paid {
+  color: var(--success);
+}
+
+.bill-hover-unpaid {
+  color: var(--destructive);
+}
+
+.bill-hover-notes {
+  font-size: 10px;
+  color: var(--muted-foreground);
+  border-top: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  padding-top: 8px;
+  margin-top: 6px;
+  max-height: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bill-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.bill-toolbar-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.bill-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bill-toolbar-btn {
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 12px;
+  border-radius: 8px;
+  padding: 4px 10px;
+  transition: all 180ms ease;
+}
+
+.bill-toolbar-icon-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
+.bill-toolbar-btn:hover,
+.bill-toolbar-btn:focus-visible {
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
 }

@@ -51,7 +51,7 @@ export function SpendingChart({ period, walletId }: ChartProps) {
 
     return {
       chartData: dataPoints.map((p) => ({
-        label: p.day || p.date || p.year,
+        label: p.day || p.date || p.year || p.month,
         Income: p.income,
         Expenses: p.expenses,
       })),

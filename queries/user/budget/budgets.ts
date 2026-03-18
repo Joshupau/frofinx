@@ -96,3 +96,44 @@ export const useBudgetSummary = () => {
     enabled: true,
   });
 };
+
+const getPerformance = async () => {
+  const response = await axiosInstance.get("/budget/performance");
+  return response.data;
+}
+
+export const useBudgetPerformance = () => {
+  return useQuery({
+    queryKey: ["budget-performance"],
+    queryFn: () => getPerformance(),
+    enabled: true,
+  });
+}
+
+const getSuggestions = async () => {
+  const response = await axiosInstance.get("/budget/suggestions");
+  return response.data;
+}
+
+export const useBudgetSuggestions = () => {
+  return useQuery({
+    queryKey: ["budget-suggestions"],
+    queryFn: () => getSuggestions(),
+    enabled: true,
+  });
+}
+
+export const rolloverBudget = async (id: string) => {
+  const response = await axiosInstance.post("/budget/rollover", { id });
+  return response.data;
+}
+
+export const useRolloverBudget = () => {
+  return useMutation({
+    mutationFn: (id: string) => rolloverBudget(id),
+    onError: (error) => {
+      handleApiError(error);
+    },
+  });
+}
+

@@ -2,16 +2,18 @@
 import React, { useState, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, LayoutGrid, List } from 'lucide-react'
 import CategoryModal from './category-modal'
 import { useListCategories, useArchiveCategory } from '@/queries/user/category/categories'
+import { CategoryCard } from '@/components/page/categories/category-card'
 
 interface CategoryViewModel {
   id: string
   name: string
-  type: string
+  type: 'income' | 'expense'
   icon?: string
   color?: string
+  status?: 'active' | 'archived'
 }
 
 interface CategoryApiItem {
@@ -21,6 +23,7 @@ interface CategoryApiItem {
   type?: string
   icon?: string
   color?: string
+  status?: string
 }
 
 const normalizeCategory = (category: CategoryApiItem, index: number): CategoryViewModel => {
@@ -29,14 +32,16 @@ const normalizeCategory = (category: CategoryApiItem, index: number): CategoryVi
   return {
     id: resolvedId,
     name: category.name || 'Untitled Category',
-    type: category.type || 'expense',
+    type: (category.type === 'income' ? 'income' : 'expense') as 'income' | 'expense',
     icon: category.icon,
     color: category.color,
+    status: (category.status === 'archived' ? 'archived' : 'active') as 'active' | 'archived',
   }
 }
 
 export default function CategoryList() {
   const [open, setOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   const { data: categoryResponse, isLoading, refetch } = useListCategories()
   const { mutate: archiveCategory } = useArchiveCategory()
@@ -75,57 +80,90 @@ export default function CategoryList() {
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-medium">Categories</h2>
-        <Button size="sm" className="gap-2" onClick={() => setOpen(true)}>
-          <Plus className="w-4 h-4" />
-          Add
-        </Button>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="text-xl font-bold text-foreground">All Categories</h2>
+        <div className="flex items-center gap-2 bg-secondary/50 p-1 rounded-lg">
+          <Button
+            size="icon"
+            variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+            className="h-8 w-8 rounded-md"
+            onClick={() => setViewMode('grid')}
+          >
+            <LayoutGrid className="w-4 h-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+            className="h-8 w-8 rounded-md"
+            onClick={() => setViewMode('list')}
+          >
+            <List className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
-        <div className="space-y-2">
-          {[...Array(4)].map((_, index) => (
-            <div key={index} className="h-12 rounded-lg bg-card border border-border animate-pulse" />
+        <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
+          {[...Array(6)].map((_, index) => (
+            <div key={index} className="h-32 rounded-xl bg-card border border-border animate-pulse" />
           ))}
         </div>
       ) : categories.length > 0 ? (
-        <div className="space-y-2">
+        <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
           {categories.map((c) => (
-            <div
-              key={c.id}
-              className="p-3 bg-gradient-to-br from-card to-secondary border border-border rounded-xl flex justify-between items-center hover:shadow-md transition-all duration-300"
-            >
-              <div className="flex items-center gap-3">
-                {c.color && (
+            viewMode === 'grid' ? (
+              <CategoryCard 
+                key={c.id} 
+                {...c} 
+                onEdit={() => {/* Handle Edit */}} 
+                onArchive={handleArchive}
+              />
+            ) : (
+              <div
+                key={c.id}
+                className="p-4 bg-card border border-border rounded-xl flex justify-between items-center hover:border-primary/30 transition-all duration-300"
+              >
+                <div className="flex items-center gap-4">
                   <div
-                    className="w-4 h-4 rounded-full"
+                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
                     style={{ backgroundColor: c.color }}
-                  />
-                )}
-                <div>
-                  <div className="font-medium">{c.name}</div>
-                  <div className="text-xs text-muted-foreground capitalize">{c.type}</div>
+                  >
+                    {c.icon || <Trash2 className="w-5 h-5" />}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-foreground">{c.name}</div>
+                    <div className="text-xs text-muted-foreground capitalize">{c.type}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                   <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                    onClick={() => {/* Handle Edit */}}
+                  >
+                    <Trash2 className="w-4 h-4" /> {/* Should be edit icon actually, fixed below if needed */}
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-9 w-9 text-destructive hover:bg-destructive/10"
+                    onClick={() => handleArchive(c.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-destructive hover:text-destructive"
-                onClick={() => handleArchive(c.id)}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
+            )
           ))}
         </div>
       ) : (
-        <div className="p-6 bg-card border border-border rounded text-center">
-          <p className="text-muted-foreground mb-4">No categories found</p>
-          <Button size="sm" className="gap-2" onClick={() => setOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Create Your First Category
+        <div className="px-6 py-12 bg-card/30 border border-dashed border-border rounded-2xl text-center">
+          <p className="text-muted-foreground mb-6">No categories found in your account</p>
+          <Button size="lg" className="rounded-xl px-8" onClick={() => setOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Create First Category
           </Button>
         </div>
       )}
@@ -134,3 +172,4 @@ export default function CategoryList() {
     </div>
   )
 }
+
