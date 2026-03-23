@@ -34,7 +34,7 @@ export function WalletCard({
   onTransfer,
   onReceive,
 }: WalletCardProps) {
-  const [showBalance, setShowBalance] = useState(true)
+  const [showBalance, setShowBalance] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
 
   const getWalletIcon = () => {

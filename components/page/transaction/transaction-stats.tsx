@@ -1,6 +1,7 @@
 'use client'
 
-import { TrendingUp, TrendingDown, Shuffle, MoreHorizontal } from 'lucide-react'
+import { useState } from 'react'
+import { TrendingUp, TrendingDown, Shuffle, MoreHorizontal, Eye, EyeOff } from 'lucide-react'
 
 interface TransactionStats {
   totalIncome: number
@@ -15,6 +16,8 @@ interface TransactionStatsProps {
 }
 
 export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
+  const [showStats, setShowStats] = useState(false)
+
   const statCards = [
     {
       label: 'Total Income',
@@ -50,8 +53,26 @@ export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
     },
   ]
 
+  const formatStatValue = (stat: (typeof statCards)[number]) => {
+    if (!showStats) return '••••••'
+    if (typeof stat.value === 'number' && stat.value > 100) {
+      return `${stat.currency}${Math.abs(stat.value).toLocaleString('en-US', { maximumFractionDigits: 2 })}`
+    }
+    return stat.value
+  }
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div>
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => setShowStats((prev) => !prev)}
+          className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+          aria-label={showStats ? 'Hide amounts' : 'Show amounts'}
+        >
+          {showStats ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+        </button>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {statCards.map((stat, index) => (
         <div key={index} className="bg-card border border-border rounded-lg p-6">
           <div className="flex items-start justify-between mb-4">
@@ -64,11 +85,12 @@ export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
             <div className="h-8 bg-secondary rounded animate-pulse" />
           ) : (
             <p className={`text-2xl font-bold ${stat.color}`}>
-              {typeof stat.value === 'number' && stat.value > 100 ? `${stat.currency}${Math.abs(stat.value).toLocaleString('en-US', { maximumFractionDigits: 2 })}` : stat.value}
+              {formatStatValue(stat)}
             </p>
           )}
         </div>
       ))}
+      </div>
     </div>
   )
 }

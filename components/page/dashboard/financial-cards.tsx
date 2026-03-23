@@ -1,9 +1,9 @@
 'use client'
 
-import { useMemo } from 'react'
-import { TrendingUp, TrendingDown, Wallet, DollarSign, ShoppingCart, Zap } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { TrendingUp, TrendingDown, Wallet, ShoppingCart, Zap, Eye, EyeOff } from 'lucide-react'
 import { useListWallets } from '@/queries/user/wallet/wallets'
-import { useListTransactions, useQuickStats, useTransactionChartData } from '@/queries/user/transaction/transaction'
+import { useQuickStats } from '@/queries/user/transaction/transaction'
 
 interface FinancialCard {
   title: string
@@ -37,7 +37,8 @@ interface FinancialCardsProps {
 export function FinancialCards({ period = 'month' }: FinancialCardsProps) {
   const { data: walletResponse, isLoading: walletsLoading } = useListWallets()
   const { data: quickStatsResponse, isLoading: quickStatsLoading } = useQuickStats({ period })
-  const { data: chartDataResponse, isLoading: chartDataLoading } = useTransactionChartData({ period, walletId: undefined })
+  const [showAmounts, setShowAmounts] = useState(false)
+
   const cards: FinancialCard[] = useMemo(() => {
     // Calculate total balance from wallets
     let totalBalance = 0
@@ -56,7 +57,6 @@ export function FinancialCards({ period = 'month' }: FinancialCardsProps) {
     // Extract data from quick stats
     const stats = quickStatsResponse?.data?.stats || {}
     const spentToday = quickStatsResponse?.data?.spentToday || {}
-    const income = Number(stats.income || 0)
     const expenses = Number(stats.expenses || 0)
     const totalSpent = Number(spentToday.totalSpent || 0)
     const transactionCount = Number(stats.transactions || 0)
@@ -132,7 +132,16 @@ export function FinancialCards({ period = 'month' }: FinancialCardsProps) {
             {card.isLoading ? (
               <div className="h-8 bg-secondary rounded animate-pulse" />
             ) : (
-              <p className="text-2xl font-bold text-foreground">{card.amount}</p>
+              <div className="flex items-center justify-between">
+                <p className="text-2xl font-bold text-foreground">{showAmounts ? card.amount : '••••••'}</p>
+                <button
+                  onClick={() => setShowAmounts(!showAmounts)}
+                  className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+                  aria-label={showAmounts ? 'Hide amounts' : 'Show amounts'}
+                >
+                  {showAmounts ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                </button>
+              </div>
             )}
           </div>
         )
