@@ -7,6 +7,7 @@ import { SpendingChart, PeriodSummaryCard } from '@/components/page/dashboard/sp
 import { useListWallets } from '@/queries/user/wallet/wallets'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Check } from 'lucide-react'
+import { StatisticsPreviewCard } from '@/components/page/dashboard/statistics-preview-card'
 
 import { IonPage, IonContent } from '@ionic/react'
 import { BillCalendarCard } from '@/components/page/dashboard/bill-calendar-card'
@@ -124,19 +125,13 @@ export default function DashboardPage() {
             </Popover>
           </div>
 
+          <div className="mb-6">
+            <StatisticsPreviewCard period={period} walletId={walletId || undefined} />
+          </div>
+
           {/* Financial Cards */}
           <div className="mb-6">
             <FinancialCards period={period} />
-          </div>
-
-          {/* Bento row: spending chart + period summary */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-            <div className="lg:col-span-2 min-h-[280px]">
-              <SpendingChart period={period} walletId={walletId || undefined} />
-            </div>
-            <div className="lg:col-span-1">
-              <PeriodSummaryCard period={period} walletId={walletId || undefined} />
-            </div>
           </div>
 
           {/* Main Content Grid */}

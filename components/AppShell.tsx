@@ -10,6 +10,7 @@ import { FloatingAgent } from '@/components/floating-agent';
 import SignInPage from '@/ionic-pages/SignInPage';
 import SignUpPage from '@/ionic-pages/SignUpPage';
 import DashboardPage from '@/ionic-pages/DashboardPage';
+import StatisticsPage from '@/ionic-pages/StatisticsPage';
 import BillsPage from '@/ionic-pages/BillsPage';
 import BudgetsPage from '@/ionic-pages/BudgetsPage';
 import CategoriesPage from '@/ionic-pages/CategoriesPage';
@@ -33,6 +34,7 @@ function AppShellInner() {
           <Route exact path="/signin" component={SignInPage} />
           <Route exact path="/signup" component={SignUpPage} />
           <Route exact path="/dashboard" component={DashboardPage} />
+          <Route exact path="/statistics" component={StatisticsPage} />
           <Route exact path="/wallets" component={WalletsPage} />
           <Route exact path="/transactions" component={TransactionsPage} />
           <Route exact path="/bills" component={BillsPage} />

@@ -170,7 +170,7 @@ export const useTransactionTags = () => {
   });
 }
 
-const getCharatData = async (params?: quickStatsTransactionParams) => {
+const getChartData = async (params?: quickStatsTransactionParams) => {
   const response = await axiosInstance.get("/transaction/chart-data", { params });
   return response.data;
 }
@@ -178,7 +178,22 @@ const getCharatData = async (params?: quickStatsTransactionParams) => {
 export const useTransactionChartData = (params?: quickStatsTransactionParams) => {
   return useQuery({
     queryKey: ["transaction-chart-data", params],
-    queryFn: () => getCharatData(params || { period: 'month' }),
+    queryFn: () => getChartData(params || { period: 'month' }),
     enabled: true,
   });
 }
+
+export const getTopCategories = async (params?: quickStatsTransactionParams) => {
+  // const response = await axiosInstance.get("/transaction/top-categories", { params });
+  const response = await axiosInstance.get("/transaction/report/category", { params });
+  return response.data;
+}
+
+export const useTopCategories = (params?: quickStatsTransactionParams) => {
+  return useQuery({
+    queryKey: ["transaction-top-categories", params],
+    queryFn: () => getTopCategories(params || { period: 'month', type: 'expense' }),
+    enabled: true,
+  });
+}
+

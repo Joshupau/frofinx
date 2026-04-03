@@ -80,4 +80,5 @@ export type transactionsSummaryParams = {
 export type quickStatsTransactionParams = {
   period: string; // today, week, month, year, all
   walletId?: string;
+  type?: TransactionType;
 }

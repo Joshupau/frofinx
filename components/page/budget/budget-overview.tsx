@@ -1,11 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Wallet, TrendingUp, AlertCircle, PieChart, Info, ArrowUpRight, Eye, EyeOff } from 'lucide-react'
+import { Wallet, TrendingUp, AlertCircle, PieChart, Info } from 'lucide-react'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { useSettingsStore } from '@/store/settings-store'
-import { formatMoney } from '@/utils/formatter'
 
 interface BudgetOverviewProps {
   totalBudgeted: number
@@ -13,7 +10,7 @@ interface BudgetOverviewProps {
   totalRemaining: number
   activeBudgets: number
   exceededBudgets: number
-  currency?: string
+  currency: string
   burnRate?: number
   message?: string
 }
@@ -28,15 +25,14 @@ export function BudgetOverview({
   burnRate = 0,
   message
 }: BudgetOverviewProps) {
-  const { currency: settingsCurrency, hideAmountsOnOpen } = useSettingsStore()
-  const [showAmounts, setShowAmounts] = useState(!hideAmountsOnOpen)
-  const resolvedCurrency = currency || settingsCurrency
   const percentageSpent = totalBudgeted > 0 ? (totalSpent / totalBudgeted) * 100 : 0
-  const formatValue = (val: number) => formatMoney(val, resolvedCurrency, !showAmounts)
-
-  useEffect(() => {
-    setShowAmounts(!hideAmountsOnOpen)
-  }, [hideAmountsOnOpen])
+  
+  const formatValue = (val: number) => {
+    return `${currency}${val.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`
+  }
 
   return (
     <div className="space-y-6 mb-8">
@@ -89,76 +85,44 @@ export function BudgetOverview({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-secondary/40 border border-border/50 rounded-xl p-4 transition-all hover:bg-secondary/60 relative">
+            <div className="bg-secondary/40 border border-border/50 rounded-xl p-4 transition-all hover:bg-secondary/60">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-success/10 rounded-lg">
                   <Wallet className="w-4 h-4 text-success" />
                 </div>
                 <span className="text-xs font-semibold text-muted-foreground uppercase">Remaining</span>
-                <button
-                  type="button"
-                  onClick={() => setShowAmounts((current) => !current)}
-                  className="ml-auto p-2 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label={showAmounts ? 'Hide budget amounts' : 'Show budget amounts'}
-                >
-                  {showAmounts ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                </button>
               </div>
-              <p className="text-xl font-bold text-success truncate">{formatValue(totalRemaining)}</p>
+              <p className="text-xl font-bold text-success break-words">{formatValue(totalRemaining)}</p>
             </div>
 
-            <div className="bg-secondary/40 border border-border/50 rounded-xl p-4 transition-all hover:bg-secondary/60 relative">
+            <div className="bg-secondary/40 border border-border/50 rounded-xl p-4 transition-all hover:bg-secondary/60">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <TrendingUp className="w-4 h-4 text-primary" />
                 </div>
                 <span className="text-xs font-semibold text-muted-foreground uppercase">Exceeded</span>
-                <button
-                  type="button"
-                  onClick={() => setShowAmounts((current) => !current)}
-                  className="ml-auto p-2 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label={showAmounts ? 'Hide budget amounts' : 'Show budget amounts'}
-                >
-                  {showAmounts ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                </button>
               </div>
-              <p className="text-xl font-bold text-destructive truncate">{exceededBudgets} Budgets</p>
+              <p className="text-xl font-bold text-destructive break-words">{exceededBudgets} Budgets</p>
             </div>
 
-            <div className="bg-secondary/40 border border-border/50 rounded-xl p-4 transition-all hover:bg-secondary/60 relative">
+            <div className="bg-secondary/40 border border-border/50 rounded-xl p-4 transition-all hover:bg-secondary/60">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-accent/10 rounded-lg">
                   <PieChart className="w-4 h-4 text-accent" />
                 </div>
                 <span className="text-xs font-semibold text-muted-foreground uppercase">Burn Rate</span>
-                <button
-                  type="button"
-                  onClick={() => setShowAmounts((current) => !current)}
-                  className="ml-auto p-2 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label={showAmounts ? 'Hide budget amounts' : 'Show budget amounts'}
-                >
-                  {showAmounts ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                </button>
               </div>
-              <p className="text-xl font-bold text-foreground truncate">{burnRate.toFixed(1)}%</p>
+              <p className="text-xl font-bold text-foreground break-words">{burnRate.toFixed(1)}%</p>
             </div>
 
-            <div className="bg-secondary/40 border border-border/50 rounded-xl p-4 transition-all hover:bg-secondary/60 relative">
+            <div className="bg-secondary/40 border border-border/50 rounded-xl p-4 transition-all hover:bg-secondary/60">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-warning/10 rounded-lg">
                   <AlertCircle className="w-4 h-4 text-warning" />
                 </div>
                 <span className="text-xs font-semibold text-muted-foreground uppercase">Active</span>
-                <button
-                  type="button"
-                  onClick={() => setShowAmounts((current) => !current)}
-                  className="ml-auto p-2 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label={showAmounts ? 'Hide budget amounts' : 'Show budget amounts'}
-                >
-                  {showAmounts ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                </button>
               </div>
-              <p className="text-xl font-bold text-foreground truncate">{activeBudgets} Total</p>
+              <p className="text-xl font-bold text-foreground break-words">{activeBudgets} Total</p>
             </div>
           </div>
         </div>

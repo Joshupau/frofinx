@@ -7,6 +7,7 @@ export async function generateStaticParams() {
     { all: ['signin'] },
     { all: ['signup'] },
     { all: ['dashboard'] },
+    { all: ['statistics'] },
     { all: ['wallets'] },
     { all: ['transactions'] },
     { all: ['budgets'] },
