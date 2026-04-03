@@ -109,7 +109,7 @@ export function MarkPaidDialog({ open, bill, onOpenChange, onConfirm, isProcessi
               Absence Deduction <span className="text-muted-foreground font-normal">(Optional)</span>
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">{currencySymbol}</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">{currency}</span>
               <Input
                 id="deductionAmount"
                 type="number"
