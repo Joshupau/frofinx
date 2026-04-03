@@ -59,7 +59,7 @@ const localizer = dateFnsLocalizer({
 })
 
 function BillEvent({ event }: EventProps<BillCalendarEvent>) {
-  const { currency, hideAmountsOnOpen } = useSettingsStore()
+  const { currency } = useSettingsStore()
   const isPaid = event.resource.status === 'paid'
   const isOverdue = !isPaid && new Date(event.resource.date) < new Date()
   
@@ -77,14 +77,14 @@ function BillEvent({ event }: EventProps<BillCalendarEvent>) {
         ) : (
           <CreditCard className="w-2.5 h-2.5" />
         )}
-        <span className="bill-badge-amount">{formatMoney(event.resource.amount, currency, hideAmountsOnOpen)}</span>
+        <span className="bill-badge-amount">{formatMoney(event.resource.amount, currency, false)}</span>
       </div>
 
       <div className="bill-event-hovercard" role="tooltip">
         <p className="bill-hover-title">{event.title}</p>
         <div className="bill-hover-grid">
           <span className="bill-hover-label">Amount</span>
-          <span className="bill-hover-value">{formatMoney(event.resource.amount, currency, hideAmountsOnOpen)}</span>
+          <span className="bill-hover-value">{formatMoney(event.resource.amount, currency, false)}</span>
           <span className="bill-hover-label">Status</span>
           <span className={`bill-hover-value ${isPaid ? 'bill-hover-paid' : 'bill-hover-unpaid'}`}>
             {event.resource.status}

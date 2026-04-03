@@ -1,5 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card'
-import { ReceiptText, AlarmClock, CircleX, CircleCheck } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ReceiptText, AlarmClock, CircleX, CircleCheck, Eye, EyeOff } from 'lucide-react'
 import { BillSummary } from '@/types/bill'
 import { useSettingsStore } from '@/store/settings-store'
 import { formatMoney } from '@/utils/formatter'
@@ -13,10 +14,21 @@ interface BillsOverviewProps {
 
 export function BillsOverview({ summary, upcomingCount, overdueCount, isLoading }: BillsOverviewProps) {
   const { currency, hideAmountsOnOpen } = useSettingsStore()
+  const [visibleCards, setVisibleCards] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    setVisibleCards({
+      totalBillAmount: !hideAmountsOnOpen,
+      overdueBills: !hideAmountsOnOpen,
+      paidAmount: !hideAmountsOnOpen,
+    })
+  }, [hideAmountsOnOpen])
+
   const cards = [
     {
       title: 'Total Bill Amount',
-      value: formatMoney(summary.totalAmount, currency, hideAmountsOnOpen),
+      key: 'totalBillAmount',
+      value: formatMoney(summary.totalAmount, currency, false),
       note: `${summary.totalBills} total bill${summary.totalBills === 1 ? '' : 's'}`,
       icon: <ReceiptText className="w-5 h-5 text-primary" />,
       iconBg: 'bg-primary/15',
@@ -25,6 +37,7 @@ export function BillsOverview({ summary, upcomingCount, overdueCount, isLoading 
     },
     {
       title: 'Due Soon',
+      key: 'dueSoon',
       value: `${upcomingCount}`,
       note: `${summary.unpaidBills} unpaid bill${summary.unpaidBills === 1 ? '' : 's'}`,
       icon: <AlarmClock className="w-5 h-5 text-warning" />,
@@ -34,8 +47,9 @@ export function BillsOverview({ summary, upcomingCount, overdueCount, isLoading 
     },
     {
       title: 'Overdue Bills',
+      key: 'overdueBills',
       value: `${overdueCount}`,
-      note: formatMoney(summary.unpaidAmount, currency, hideAmountsOnOpen),
+      note: formatMoney(summary.unpaidAmount, currency, false),
       icon: <CircleX className="w-5 h-5 text-destructive" />,
       iconBg: 'bg-destructive/15',
       border: 'border-destructive/30',
@@ -43,7 +57,8 @@ export function BillsOverview({ summary, upcomingCount, overdueCount, isLoading 
     },
     {
       title: 'Paid Amount',
-      value: formatMoney(summary.paidAmount, currency, hideAmountsOnOpen),
+      key: 'paidAmount',
+      value: formatMoney(summary.paidAmount, currency, false),
       note: `${summary.paidBills} paid bill${summary.paidBills === 1 ? '' : 's'}`,
       icon: <CircleCheck className="w-5 h-5 text-success" />,
       iconBg: 'bg-success/15',
@@ -53,13 +68,26 @@ export function BillsOverview({ summary, upcomingCount, overdueCount, isLoading 
   ]
 
   return (
-    <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
+    <div>
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
       {cards.map((card) => (
         <Card key={card.title} className={`py-0 border ${card.border} bg-gradient-to-br ${card.background}`}>
           <CardContent className="p-3 sm:p-5 min-w-0">
             <div className="flex items-center justify-between mb-4">
               <p className="text-xs sm:text-sm text-muted-foreground">{card.title}</p>
-              <div className={`p-2 rounded-lg ${card.iconBg} shrink-0`}>{card.icon}</div>
+              <div className="flex items-center gap-2">
+                <div className={`p-2 rounded-lg ${card.iconBg} shrink-0`}>{card.icon}</div>
+                {card.key !== 'dueSoon' && (
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCards((current) => ({ ...current, [card.key]: !current[card.key] }))}
+                    className="p-2 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                    aria-label={visibleCards[card.key] ? `Hide ${card.title}` : `Show ${card.title}`}
+                  >
+                    {visibleCards[card.key] ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                  </button>
+                )}
+              </div>
             </div>
 
             {isLoading ? (
@@ -69,13 +97,14 @@ export function BillsOverview({ summary, upcomingCount, overdueCount, isLoading 
               </div>
             ) : (
               <>
-                <p className="text-lg sm:text-2xl font-bold text-foreground truncate">{card.value}</p>
+                <p className="text-lg sm:text-2xl font-bold text-foreground truncate">{card.key === 'dueSoon' || visibleCards[card.key] ? card.value : '••••••'}</p>
                 <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{card.note}</p>
               </>
             )}
           </CardContent>
         </Card>
       ))}
+      </div>
     </div>
   )
 }

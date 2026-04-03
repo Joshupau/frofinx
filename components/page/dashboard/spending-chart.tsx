@@ -42,7 +42,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
 
 export function SpendingChart({ period, walletId }: ChartProps) {
   const { data: chartDataResponse, isLoading } = useTransactionChartData({ period, walletId })
-  const { currency, hideAmountsOnOpen } = useSettingsStore()
+  const { currency } = useSettingsStore()
 
   const { chartData } = useMemo(() => {
     const raw = chartDataResponse?.data
@@ -110,7 +110,7 @@ export function SpendingChart({ period, walletId }: ChartProps) {
                 tick={{ fontSize: 10, fill: 'currentColor', opacity: 0.5 }}
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(v) => (hideAmountsOnOpen ? '' : formatMoney(Number(v) || 0, currency, false))}
+                tickFormatter={(v) => formatMoney(Number(v) || 0, currency, false)}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area
@@ -141,7 +141,7 @@ export function SpendingChart({ period, walletId }: ChartProps) {
 
 export function PeriodSummaryCard({ period, walletId }: ChartProps) {
   const { data: chartDataResponse, isLoading } = useTransactionChartData({ period, walletId })
-  const { currency, hideAmountsOnOpen } = useSettingsStore()
+  const { currency } = useSettingsStore()
 
   const totals = useMemo(() => {
     const raw = chartDataResponse?.data
@@ -177,7 +177,7 @@ export function PeriodSummaryCard({ period, walletId }: ChartProps) {
             <div className={`flex items-center gap-2 ${isPositive ? 'text-success' : 'text-destructive'}`}>
               {isPositive ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
               <span className="text-xl font-bold truncate">
-                {hideAmountsOnOpen ? '••••••' : `${isPositive ? '+' : ''}${formatMoney(Math.abs(net), currency, false)}`}
+                {`${isPositive ? '+' : ''}${formatMoney(Math.abs(net), currency, false)}`}
               </span>
             </div>
           </div>
@@ -189,7 +189,7 @@ export function PeriodSummaryCard({ period, walletId }: ChartProps) {
                 <TrendingUp className="w-3.5 h-3.5 text-success" />
                 Income
               </span>
-              <span className="font-semibold text-success">{formatMoney(totals.income, currency, hideAmountsOnOpen)}</span>
+              <span className="font-semibold text-success">{formatMoney(totals.income, currency, false)}</span>
             </div>
             <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
               <div
@@ -206,7 +206,7 @@ export function PeriodSummaryCard({ period, walletId }: ChartProps) {
                 <TrendingDown className="w-3.5 h-3.5 text-destructive" />
                 Expenses
               </span>
-              <span className="font-semibold text-destructive">{formatMoney(totals.expenses, currency, hideAmountsOnOpen)}</span>
+              <span className="font-semibold text-destructive">{formatMoney(totals.expenses, currency, false)}</span>
             </div>
             <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
               <div
@@ -245,7 +245,7 @@ export function PeriodSummaryCard({ period, walletId }: ChartProps) {
                   <ArrowLeftRight className="w-3.5 h-3.5 text-accent" />
                   Transfers
                 </span>
-                <span className="font-semibold text-accent">{formatMoney(totals.transfers, currency, hideAmountsOnOpen)}</span>
+                <span className="font-semibold text-accent">{formatMoney(totals.transfers, currency, false)}</span>
               </div>
             </div>
           )}

@@ -1,6 +1,7 @@
 'use client'
 
-import { TrendingUp, TrendingDown, Shuffle, MoreHorizontal } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { TrendingUp, TrendingDown, Shuffle, MoreHorizontal, Eye, EyeOff } from 'lucide-react'
 import { useSettingsStore } from '@/store/settings-store'
 import { formatMoney } from '@/utils/formatter'
 
@@ -18,9 +19,19 @@ interface TransactionStatsProps {
 
 export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
   const { currency, hideAmountsOnOpen } = useSettingsStore()
+  const [visibleCards, setVisibleCards] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    setVisibleCards({
+      totalIncome: !hideAmountsOnOpen,
+      totalExpense: !hideAmountsOnOpen,
+      totalTransfers: !hideAmountsOnOpen,
+    })
+  }, [hideAmountsOnOpen])
 
   const statCards = [
     {
+      key: 'totalIncome',
       label: 'Total Income',
       value: stats.totalIncome,
       icon: <TrendingUp className="w-5 h-5" />,
@@ -28,6 +39,7 @@ export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
       bgColor: 'bg-success/10',
     },
     {
+      key: 'totalExpense',
       label: 'Total Expenses',
       value: stats.totalExpense,
       icon: <TrendingDown className="w-5 h-5" />,
@@ -35,6 +47,7 @@ export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
       bgColor: 'bg-destructive/10',
     },
     {
+      key: 'totalTransfers',
       label: 'Transfers',
       value: stats.totalTransfers,
       icon: <Shuffle className="w-5 h-5" />,
@@ -42,6 +55,7 @@ export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
       bgColor: 'bg-accent/10',
     },
     {
+      key: 'transactionCount',
       label: 'Transactions',
       value: stats.transactionCount,
       icon: <MoreHorizontal className="w-5 h-5" />,
@@ -51,8 +65,10 @@ export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
   ]
 
   const formatStatValue = (stat: (typeof statCards)[number]) => {
-    if (hideAmountsOnOpen) {
-      return stat.label === 'Transactions' ? stat.value : '••••••'
+    const isVisible = visibleCards[stat.key]
+
+    if (typeof stat.value === 'number' && stat.label !== 'Transactions' && !isVisible) {
+      return '••••••'
     }
 
     if (typeof stat.value === 'number' && stat.label !== 'Transactions') {
@@ -70,6 +86,16 @@ export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
             <div className={`${stat.bgColor} ${stat.color} p-2 sm:p-3 rounded-lg shrink-0`}>
               {stat.icon}
             </div>
+            {stat.key !== 'transactionCount' && (
+              <button
+                type="button"
+                onClick={() => setVisibleCards((current) => ({ ...current, [stat.key]: !current[stat.key] }))}
+                className="p-2 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                aria-label={visibleCards[stat.key] ? `Hide ${stat.label}` : `Show ${stat.label}`}
+              >
+                {visibleCards[stat.key] ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              </button>
+            )}
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground mb-1">{stat.label}</p>
           {isLoading ? (

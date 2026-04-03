@@ -63,7 +63,7 @@ export function TransactionList({
   onLoadMore,
 }: TransactionListProps) {
   const sentinelRef = useRef<HTMLDivElement>(null)
-  const { currency, hideAmountsOnOpen } = useSettingsStore()
+  const { currency } = useSettingsStore()
 
   // Setup IntersectionObserver for infinite scroll
   useEffect(() => {
@@ -126,7 +126,6 @@ export function TransactionList({
   }
 
   const formatAmount = (amount: number, type: string) => {
-    if (hideAmountsOnOpen) return '••••••'
     const prefix = type === 'income' ? '+' : type === 'expense' ? '-' : ''
     return `${prefix}${formatMoney(Math.abs(amount), currency, false)}`
   }
@@ -294,10 +293,10 @@ export function TransactionList({
               return (
                 <div className="flex justify-end gap-6 px-2 mt-3 text-sm font-semibold">
                   <div className="text-right">
-                    <p className="text-success text-sm">{hideAmountsOnOpen ? '••••••' : `+${formatMoney(income, currency, false)}`}</p>
+                    <p className="text-success text-sm">{`+${formatMoney(income, currency, false)}`}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-destructive text-sm">{hideAmountsOnOpen ? '••••••' : `-${formatMoney(expense, currency, false)}`}</p>
+                    <p className="text-destructive text-sm">{`-${formatMoney(expense, currency, false)}`}</p>
                   </div>
                 </div>
               )

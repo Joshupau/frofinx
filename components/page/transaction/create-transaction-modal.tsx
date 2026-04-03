@@ -386,7 +386,7 @@ export function CreateTransactionModal({
   const { mutate: updateTransaction, isPending: isUpdating } = useUpdateTransaction()
   const { data: walletsResponse } = useListWallets()
   const { data: categoriesResponse } = useListCategories()
-  const { currency, hideAmountsOnOpen } = useSettingsStore()
+  const { currency } = useSettingsStore()
 
   const wallets = walletsResponse?.data ? (Array.isArray(walletsResponse.data) ? walletsResponse.data : walletsResponse.data.items || []) : []
   const categories = categoriesResponse?.data ? (Array.isArray(categoriesResponse.data) ? categoriesResponse.data : categoriesResponse.data.items || []) : []
@@ -475,7 +475,7 @@ export function CreateTransactionModal({
               wallets={wallets}
               categories={categories}
               currency={currency}
-              hideAmountsOnOpen={hideAmountsOnOpen}
+              hideAmountsOnOpen={false}
               onClose={onClose}
               handleSubmit={handleSubmit}
               isPending={isPending}
@@ -502,7 +502,7 @@ export function CreateTransactionModal({
           wallets={wallets}
           categories={categories}
           currency={currency}
-          hideAmountsOnOpen={hideAmountsOnOpen}
+          hideAmountsOnOpen={false}
           onClose={onClose}
           handleSubmit={handleSubmit}
           isPending={isPending}

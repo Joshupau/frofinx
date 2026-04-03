@@ -45,10 +45,10 @@ export function BudgetCard({
   onRollover,
 }: BudgetCardProps) {
   const [showMenu, setShowMenu] = useState(false)
-  const { currency, hideAmountsOnOpen } = useSettingsStore()
+  const { currency } = useSettingsStore()
 
   const formatValue = (val: number) => {
-    return formatMoney(val, currency, hideAmountsOnOpen)
+    return formatMoney(val, currency, false)
   }
 
   const getProgressColor = () => {
