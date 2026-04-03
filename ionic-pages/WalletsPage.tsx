@@ -10,6 +10,7 @@ import { WalletCard } from '@/components/page/wallet/wallet-card'
 import { CreateWalletModal } from '@/components/page/wallet/create-wallet-modal'
 import { CreateTransactionModal } from '@/components/page/transaction/create-transaction-modal'
 import { useArchiveWallet, useListWallets } from '@/queries/user/wallet/wallets'
+import { useSettingsStore } from '@/store/settings-store'
 import { WalletStatus, WalletType } from '@/types/wallet'
 
 interface WalletViewModel {
@@ -40,7 +41,7 @@ interface WalletApiItem {
 
 const walletTypeValues: WalletType[] = ['bank', 'cash', 'ewallet', 'credit_card', 'other']
 
-const normalizeWallet = (wallet: WalletApiItem, index: number): WalletViewModel => {
+const normalizeWallet = (wallet: WalletApiItem, index: number, fallbackCurrency: string): WalletViewModel => {
   const resolvedId = wallet._id ?? wallet.id ?? `wallet-${index}`
 
   const rawBalance = wallet.balance ?? wallet.currentBalance ?? 0
@@ -57,7 +58,7 @@ const normalizeWallet = (wallet: WalletApiItem, index: number): WalletViewModel 
     name: wallet.name?.trim() || 'Untitled Wallet',
     type: resolvedType,
     balance: Number.isFinite(numericBalance) ? numericBalance : 0,
-    currency: wallet.currency || '$',
+    currency: wallet.currency || fallbackCurrency,
     color: wallet.color,
     icon: wallet.icon,
     accountNumber: wallet.accountNumber,
@@ -69,12 +70,14 @@ export function WalletsPage() {
   const [filterType, setFilterType] = useState<string>('all')
   const [showArchived, setShowArchived] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [selectedWallet, setSelectedWallet] = useState<WalletViewModel | null>(null)
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [showReceiveModal, setShowReceiveModal] = useState(false)
   const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null)
 
   const { data: walletResponse, isLoading, refetch } = useListWallets()
   const { mutate: archiveWallet } = useArchiveWallet()
+  const { currency } = useSettingsStore()
 
   const wallets = useMemo(() => {
     const responseData = walletResponse?.data as
@@ -83,15 +86,15 @@ export function WalletsPage() {
       | undefined
 
     if (Array.isArray(responseData)) {
-      return responseData.map((wallet, walletIndex) => normalizeWallet(wallet, walletIndex))
+      return responseData.map((wallet, walletIndex) => normalizeWallet(wallet, walletIndex, currency))
     }
 
     if (responseData && Array.isArray(responseData.items)) {
-      return responseData.items.map((wallet, walletIndex) => normalizeWallet(wallet, walletIndex))
+      return responseData.items.map((wallet, walletIndex) => normalizeWallet(wallet, walletIndex, currency))
     }
 
     if (responseData && Array.isArray(responseData.wallets)) {
-      return responseData.wallets.map((wallet, walletIndex) => normalizeWallet(wallet, walletIndex))
+      return responseData.wallets.map((wallet, walletIndex) => normalizeWallet(wallet, walletIndex, currency))
     }
 
     return []
@@ -165,7 +168,7 @@ export function WalletsPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <WalletOverview
               totalBalance={totalBalance}
-              currency="₱"
+              currency={currency}
               activeWallets={activeWallets.length}
               totalWallets={wallets.length}
               monthlyIncome={monthlyIncome}
@@ -234,7 +237,7 @@ export function WalletsPage() {
                   <WalletCard
                     key={wallet.id}
                     {...wallet}
-                    onEdit={() => toast('Edit functionality coming soon!')}
+                    onEdit={() => setSelectedWallet(wallet)}
                     onArchive={handleArchiveWallet}
                     onTransfer={handleTransfer}
                     onReceive={handleReceive}
@@ -258,6 +261,13 @@ export function WalletsPage() {
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSuccess={() => refetch()}
+      />
+
+      <CreateWalletModal
+        open={!!selectedWallet}
+        onClose={() => setSelectedWallet(null)}
+        onSuccess={() => refetch()}
+        wallet={selectedWallet}
       />
 
       {/* Transfer Modal */}

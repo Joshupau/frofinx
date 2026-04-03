@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { TrendingUp, TrendingDown, Shuffle, MoreHorizontal, Eye, EyeOff } from 'lucide-react'
+import { TrendingUp, TrendingDown, Shuffle, MoreHorizontal } from 'lucide-react'
+import { useSettingsStore } from '@/store/settings-store'
+import { formatMoney } from '@/utils/formatter'
 
 interface TransactionStats {
   totalIncome: number
@@ -16,7 +17,7 @@ interface TransactionStatsProps {
 }
 
 export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
-  const [showStats, setShowStats] = useState(false)
+  const { currency, hideAmountsOnOpen } = useSettingsStore()
 
   const statCards = [
     {
@@ -25,7 +26,6 @@ export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
       icon: <TrendingUp className="w-5 h-5" />,
       color: 'text-success',
       bgColor: 'bg-success/10',
-      currency: '₱',
     },
     {
       label: 'Total Expenses',
@@ -33,7 +33,6 @@ export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
       icon: <TrendingDown className="w-5 h-5" />,
       color: 'text-destructive',
       bgColor: 'bg-destructive/10',
-      currency: '₱',
     },
     {
       label: 'Transfers',
@@ -41,7 +40,6 @@ export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
       icon: <Shuffle className="w-5 h-5" />,
       color: 'text-accent',
       bgColor: 'bg-accent/10',
-      currency: '₱',
     },
     {
       label: 'Transactions',
@@ -49,42 +47,35 @@ export function TransactionStats({ stats, isLoading }: TransactionStatsProps) {
       icon: <MoreHorizontal className="w-5 h-5" />,
       color: 'text-primary',
       bgColor: 'bg-primary/10',
-      currency: '',
     },
   ]
 
   const formatStatValue = (stat: (typeof statCards)[number]) => {
-    if (!showStats) return '••••••'
-    if (typeof stat.value === 'number' && stat.value > 100) {
-      return `${stat.currency}${Math.abs(stat.value).toLocaleString('en-US', { maximumFractionDigits: 2 })}`
+    if (hideAmountsOnOpen) {
+      return stat.label === 'Transactions' ? stat.value : '••••••'
+    }
+
+    if (typeof stat.value === 'number' && stat.label !== 'Transactions') {
+      return formatMoney(Math.abs(stat.value), currency, false)
     }
     return stat.value
   }
 
   return (
     <div>
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={() => setShowStats((prev) => !prev)}
-          className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
-          aria-label={showStats ? 'Hide amounts' : 'Show amounts'}
-        >
-          {showStats ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-        </button>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
       {statCards.map((stat, index) => (
-        <div key={index} className="bg-card border border-border rounded-lg p-6">
+        <div key={index} className="bg-card border border-border rounded-lg p-3 sm:p-6 min-w-0">
           <div className="flex items-start justify-between mb-4">
-            <div className={`${stat.bgColor} ${stat.color} p-3 rounded-lg`}>
+            <div className={`${stat.bgColor} ${stat.color} p-2 sm:p-3 rounded-lg shrink-0`}>
               {stat.icon}
             </div>
           </div>
-          <p className="text-sm text-muted-foreground mb-1">{stat.label}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mb-1">{stat.label}</p>
           {isLoading ? (
             <div className="h-8 bg-secondary rounded animate-pulse" />
           ) : (
-            <p className={`text-2xl font-bold ${stat.color}`}>
+            <p className={`text-lg sm:text-2xl font-bold ${stat.color} truncate`}>
               {formatStatValue(stat)}
             </p>
           )}

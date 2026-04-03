@@ -5,12 +5,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import toast from 'react-hot-toast'
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
-} from '@/components/ui/dialog'
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -20,9 +21,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useCreateBudget, useListBudgets, useBudgetSummary } from '@/queries/user/budget/budgets'
+import { useCreateBudget, useListBudgets, useBudgetSummary, useUpdateBudget } from '@/queries/user/budget/budgets'
 import { useListCategories } from '@/queries/user/category/categories'
+import { useSettingsStore } from '@/store/settings-store'
+import { getCurrencySymbol } from '@/types/settings'
 import { Loader2 } from 'lucide-react'
+import { BudgetPeriod } from '@/types/budget'
 
 const budgetSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -34,11 +38,24 @@ const budgetSchema = z.object({
 
 type BudgetFormValues = z.infer<typeof budgetSchema>
 
-export default function BudgetModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+type BudgetSeed = {
+  id: string
+  name?: string
+  amount?: number
+  categoryId?: string
+  period?: BudgetPeriod
+  alertThreshold?: number
+}
+
+export default function BudgetModal({ open, onClose, budget }: { open: boolean; onClose: () => void; budget?: BudgetSeed | null }) {
   const { refetch: refetchBudgets } = useListBudgets()
   const { refetch: refetchSummary } = useBudgetSummary()
   const { mutate: createBudget, isPending } = useCreateBudget()
+  const { mutate: updateBudget, isPending: isUpdating } = useUpdateBudget()
   const { data: categoriesResponse } = useListCategories({ type: 'expense' })
+  const currency = useSettingsStore((state) => state.currency)
+  const currencySymbol = getCurrencySymbol(currency)
+  const isEdit = !!budget
   
   const categories = Array.isArray(categoriesResponse?.data) 
     ? categoriesResponse.data 
@@ -54,6 +71,29 @@ export default function BudgetModal({ open, onClose }: { open: boolean; onClose:
       alertThreshold: 80,
     },
   })
+
+  useEffect(() => {
+    if (!open) return
+
+    if (budget) {
+      form.reset({
+        name: budget.name || '',
+        amount: budget.amount || 0,
+        categoryId: budget.categoryId || '',
+        period: budget.period || 'monthly',
+        alertThreshold: budget.alertThreshold || 80,
+      })
+      return
+    }
+
+    form.reset({
+      name: '',
+      amount: 0,
+      categoryId: '',
+      period: 'monthly',
+      alertThreshold: 80,
+    })
+  }, [open, budget, form])
 
   const onSubmit = (data: BudgetFormValues) => {
     // Calculate startDate and endDate for the budget period
@@ -75,6 +115,25 @@ export default function BudgetModal({ open, onClose }: { open: boolean; onClose:
       startDate,
       endDate,
     }
+
+    if (isEdit && budget) {
+      updateBudget(
+        { id: budget.id, ...payload },
+        {
+          onSuccess: () => {
+            toast.success('Budget updated successfully')
+            refetchBudgets()
+            refetchSummary()
+            onClose()
+          },
+          onError: (error: any) => {
+            toast.error(error?.response?.data?.message || 'Failed to update budget')
+          },
+        }
+      )
+      return
+    }
+
     createBudget(payload, {
       onSuccess: () => {
         toast.success('Budget created successfully')
@@ -90,14 +149,26 @@ export default function BudgetModal({ open, onClose }: { open: boolean; onClose:
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[450px] rounded-[2rem] p-8">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-black text-foreground">Set New Goal</DialogTitle>
-          <p className="text-sm text-muted-foreground">Define a spending limit for your categories.</p>
-        </DialogHeader>
-        
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 py-4">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="sm:max-w-xl" showCloseButton={false}>
+        <SheetHeader>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <SheetTitle className="text-2xl font-black text-foreground">{isEdit ? 'Edit Goal' : 'Set New Goal'}</SheetTitle>
+              <SheetDescription>Define a spending limit for your categories.</SheetDescription>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              <span className="sr-only">Close</span>
+              X
+            </button>
+          </div>
+        </SheetHeader>
+
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 space-y-5 overflow-y-auto px-6 py-4">
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Goal Name</label>
             <Input 
@@ -114,7 +185,7 @@ export default function BudgetModal({ open, onClose }: { open: boolean; onClose:
             <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Trigger Limit</label>
                 <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">₱</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">{currencySymbol}</span>
                     <Input 
                         type="number"
                         {...form.register('amount')} 
@@ -184,17 +255,17 @@ export default function BudgetModal({ open, onClose }: { open: boolean; onClose:
             />
           </div>
 
-          <DialogFooter className="pt-6">
-            <Button type="button" variant="ghost" onClick={onClose} disabled={isPending} className="rounded-xl h-12">
+          <SheetFooter className="px-0 pt-6 border-t-0">
+            <Button type="button" variant="ghost" onClick={onClose} disabled={isPending || isUpdating} className="rounded-xl h-12">
               Dismiss
             </Button>
-            <Button type="submit" disabled={isPending} className="rounded-xl h-12 min-w-[140px] font-bold shadow-lg shadow-primary/20">
-              {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Activate Goal'}
+            <Button type="submit" disabled={isPending || isUpdating} className="rounded-xl h-12 min-w-[140px] font-bold shadow-lg shadow-primary/20">
+              {isPending || isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : isEdit ? 'Save Goal' : 'Activate Goal'}
             </Button>
-          </DialogFooter>
+          </SheetFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   )
 
   function onOpenChange(open: boolean) {

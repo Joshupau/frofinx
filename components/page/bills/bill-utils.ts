@@ -1,8 +1,9 @@
 import { extractArrayFromApiResponse, extractNumberFromApiResponse, getApiDataNode, isRecord, resolveEntityId } from '@/lib/api-response'
-import { Bill, BillSummary, BillStatus, PaymentStatus, RecurringFrequency } from '@/types/bill'
+import { Bill, BillSummary, BillStatus, BillType, PaymentStatus, RecurringFrequency } from '../../../types/bill'
 
-const paymentStatuses: PaymentStatus[] = ['paid', 'unpaid', 'overdue', 'partial']
+const paymentStatuses: PaymentStatus[] = ['paid', 'unpaid', 'overdue', 'partial', 'received']
 const billStatuses: BillStatus[] = ['active', 'archived']
+const billTypes: BillType[] = ['bill', 'income']
 const recurringFrequencies: RecurringFrequency[] = ['daily', 'weekly', 'monthly', 'yearly']
 
 const toNumber = (value: unknown, fallback = 0): number => {
@@ -12,6 +13,25 @@ const toNumber = (value: unknown, fallback = 0): number => {
 
 const toString = (value: unknown, fallback = ''): string => {
   return typeof value === 'string' ? value : fallback
+}
+
+const toEntityId = (value: unknown): string | undefined => {
+  if (typeof value === 'string') return value
+  if (isRecord(value) && typeof value._id === 'string') return value._id
+  if (isRecord(value) && typeof value.id === 'string') return value.id
+  return undefined
+}
+
+const toEntityObject = <T extends { _id?: unknown; id?: unknown }>(value: unknown): T | undefined => {
+  if (!isRecord(value)) return undefined
+
+  const resolvedId = toEntityId(value)
+  if (!resolvedId) return undefined
+
+  return {
+    ...(value as Record<string, unknown>),
+    _id: resolvedId,
+  } as T
 }
 
 const toBoolean = (value: unknown, fallback = false): boolean => {
@@ -32,6 +52,13 @@ const toBillStatus = (value: unknown): BillStatus => {
   return 'active'
 }
 
+const toBillType = (value: unknown): BillType => {
+  if (typeof value === 'string' && billTypes.includes(value as BillType)) {
+    return value as BillType
+  }
+  return 'bill'
+}
+
 const toRecurringFrequency = (value: unknown): RecurringFrequency | undefined => {
   if (typeof value === 'string' && recurringFrequencies.includes(value as RecurringFrequency)) {
     return value as RecurringFrequency
@@ -44,13 +71,16 @@ export const normalizeBillsResponse = (response: unknown): Bill[] => {
 
   return items.map((item, index) => ({
     id: resolveEntityId(item, `bill-${index}`),
+    type: toBillType(item.type),
     name: toString(item.name, 'Untitled Bill'),
     amount: toNumber(item.amount),
-    categoryId: toString(item.categoryId) || undefined,
+    categoryId: toEntityId(item.category ?? item.categoryId),
+    category: toEntityObject(item.category),
     dueDate: toString(item.dueDate),
     isRecurring: toBoolean(item.isRecurring),
     recurringFrequency: toRecurringFrequency(item.recurringFrequency),
-    walletId: toString(item.walletId) || undefined,
+    walletId: toEntityId(item.wallet ?? item.walletId),
+    wallet: toEntityObject(item.wallet),
     reminder: typeof item.reminder === 'boolean' ? item.reminder : undefined,
     reminderDays: typeof item.reminderDays === 'number' ? item.reminderDays : undefined,
     notes: toString(item.notes) || undefined,
@@ -58,6 +88,7 @@ export const normalizeBillsResponse = (response: unknown): Bill[] => {
     paymentStatus: toPaymentStatus(item.paymentStatus),
     paidAmount: typeof item.paidAmount === 'number' ? item.paidAmount : undefined,
     paidDate: toString(item.paidDate) || undefined,
+    absenceDeduction: typeof item.absenceDeduction === 'number' ? item.absenceDeduction : undefined,
   }))
 }
 

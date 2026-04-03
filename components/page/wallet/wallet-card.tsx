@@ -2,6 +2,8 @@
 
 import { CreditCard, Wallet, DollarSign, Eye, EyeOff, MoreVertical, ArrowUpRight, ArrowDownLeft } from 'lucide-react'
 import { useState } from 'react'
+import { useSettingsStore } from '@/store/settings-store'
+import { formatMoney } from '@/utils/formatter'
 
 interface WalletCardProps {
   id: string
@@ -36,6 +38,7 @@ export function WalletCard({
 }: WalletCardProps) {
   const [showBalance, setShowBalance] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
+  const { hideAmountsOnOpen } = useSettingsStore()
 
   const getWalletIcon = () => {
     switch (type) {
@@ -63,7 +66,7 @@ export function WalletCard({
     return labels[type]
   }
 
-  const displayBalance = showBalance ? `${currency} ${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '••••••'
+  const displayBalance = formatMoney(balance, currency, hideAmountsOnOpen && !showBalance)
 
   return (
     <div

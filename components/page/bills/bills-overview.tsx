@@ -1,7 +1,8 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { ReceiptText, AlarmClock, CircleX, CircleCheck } from 'lucide-react'
 import { BillSummary } from '@/types/bill'
-import { formatCurrency } from '@/utils/formatter'
+import { useSettingsStore } from '@/store/settings-store'
+import { formatMoney } from '@/utils/formatter'
 
 interface BillsOverviewProps {
   summary: BillSummary
@@ -11,10 +12,11 @@ interface BillsOverviewProps {
 }
 
 export function BillsOverview({ summary, upcomingCount, overdueCount, isLoading }: BillsOverviewProps) {
+  const { currency, hideAmountsOnOpen } = useSettingsStore()
   const cards = [
     {
       title: 'Total Bill Amount',
-      value: formatCurrency(summary.totalAmount),
+      value: formatMoney(summary.totalAmount, currency, hideAmountsOnOpen),
       note: `${summary.totalBills} total bill${summary.totalBills === 1 ? '' : 's'}`,
       icon: <ReceiptText className="w-5 h-5 text-primary" />,
       iconBg: 'bg-primary/15',
@@ -33,7 +35,7 @@ export function BillsOverview({ summary, upcomingCount, overdueCount, isLoading 
     {
       title: 'Overdue Bills',
       value: `${overdueCount}`,
-      note: formatCurrency(summary.unpaidAmount),
+      note: formatMoney(summary.unpaidAmount, currency, hideAmountsOnOpen),
       icon: <CircleX className="w-5 h-5 text-destructive" />,
       iconBg: 'bg-destructive/15',
       border: 'border-destructive/30',
@@ -41,7 +43,7 @@ export function BillsOverview({ summary, upcomingCount, overdueCount, isLoading 
     },
     {
       title: 'Paid Amount',
-      value: formatCurrency(summary.paidAmount),
+      value: formatMoney(summary.paidAmount, currency, hideAmountsOnOpen),
       note: `${summary.paidBills} paid bill${summary.paidBills === 1 ? '' : 's'}`,
       icon: <CircleCheck className="w-5 h-5 text-success" />,
       iconBg: 'bg-success/15',
@@ -51,13 +53,13 @@ export function BillsOverview({ summary, upcomingCount, overdueCount, isLoading 
   ]
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
       {cards.map((card) => (
         <Card key={card.title} className={`py-0 border ${card.border} bg-gradient-to-br ${card.background}`}>
-          <CardContent className="p-5">
+          <CardContent className="p-3 sm:p-5 min-w-0">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-muted-foreground">{card.title}</p>
-              <div className={`p-2 rounded-lg ${card.iconBg}`}>{card.icon}</div>
+              <p className="text-xs sm:text-sm text-muted-foreground">{card.title}</p>
+              <div className={`p-2 rounded-lg ${card.iconBg} shrink-0`}>{card.icon}</div>
             </div>
 
             {isLoading ? (
@@ -67,8 +69,8 @@ export function BillsOverview({ summary, upcomingCount, overdueCount, isLoading 
               </div>
             ) : (
               <>
-                <p className="text-2xl font-bold text-foreground">{card.value}</p>
-                <p className="text-xs text-muted-foreground mt-1">{card.note}</p>
+                <p className="text-lg sm:text-2xl font-bold text-foreground truncate">{card.value}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{card.note}</p>
               </>
             )}
           </CardContent>

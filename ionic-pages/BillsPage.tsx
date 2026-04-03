@@ -9,6 +9,7 @@ import { BillsFilters, BillsFilterState } from '@/components/page/bills/bills-fi
 import { BillsList } from '@/components/page/bills/bills-list'
 import { BillModal } from '@/components/page/bills/bill-modal'
 import { DeleteBillDialog } from '@/components/page/bills/delete-bill-dialog'
+import { MarkPaidDialog } from '@/components/page/bills/mark-paid-dialog'
 import {
   useBillSummary,
   useListBills,
@@ -25,6 +26,7 @@ const initialFilters: BillsFilterState = {
   search: '',
   paymentStatus: 'all',
   status: 'active',
+  type: 'all',
   recurrence: 'all',
   dueWindow: 'all',
 }
@@ -41,6 +43,10 @@ const convertFilterToParams = (filters: BillsFilterState, page: number, limit: n
 
   if (filters.status !== 'all') {
     params.status = filters.status
+  }
+
+  if (filters.type !== 'all') {
+    params.type = filters.type
   }
 
   if (filters.recurrence === 'recurring') {
@@ -75,6 +81,8 @@ export default function BillsPage() {
   const [editingBill, setEditingBill] = useState<Bill | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deletingBill, setDeletingBill] = useState<Bill | null>(null)
+  const [markPaidDialogOpen, setMarkPaidDialogOpen] = useState(false)
+  const [markPaidBill, setMarkPaidBill] = useState<Bill | null>(null)
 
   const apiParams = useMemo(() => convertFilterToParams(filters, page, limit), [filters, page, limit])
 
@@ -156,13 +164,22 @@ export default function BillsPage() {
   }
 
   const handleMarkPaid = (id: string) => {
+    const bill = allBills.find((b) => b.id === id) ?? null
+    setMarkPaidBill(bill)
+    setMarkPaidDialogOpen(true)
+  }
+
+  const handleConfirmMarkPaid = (id: string, paidDate: string, absenceDeduction?: number) => {
     setProcessingBillId(id)
     markPaid(
-      { id },
+      { id, paidDate, ...(absenceDeduction !== undefined && { absenceDeduction }) },
       {
         onSuccess: () => {
-          toast.success('Bill marked as paid')
+          const isIncome = markPaidBill?.type === 'income'
+          toast.success(isIncome ? 'Income marked as received' : 'Bill marked as paid')
           setProcessingBillId(null)
+          setMarkPaidDialogOpen(false)
+          setMarkPaidBill(null)
         },
         onError: () => {
           setProcessingBillId(null)
@@ -235,10 +252,10 @@ export default function BillsPage() {
             />
 
             <div className="flex items-center justify-between gap-2">
-              <h2 className="text-lg font-semibold text-foreground">Bill Ledger</h2>
+              <h2 className="text-lg font-semibold text-foreground">Ledger</h2>
               <p className="text-sm text-muted-foreground">
-                {searchFilteredBills.length} of {paginationMeta.totalItems || searchFilteredBills.length} bill
-                {searchFilteredBills.length === 1 ? '' : 's'}
+                {searchFilteredBills.length} of {paginationMeta.totalItems || searchFilteredBills.length} entr
+                {searchFilteredBills.length === 1 ? 'y' : 'ies'}
               </p>
             </div>
 
@@ -268,6 +285,14 @@ export default function BillsPage() {
             onConfirm={handleConfirmDelete}
             isDeleting={isArchiving}
             billName={deletingBill?.name || ''}
+          />
+
+          <MarkPaidDialog
+            open={markPaidDialogOpen}
+            bill={markPaidBill}
+            onOpenChange={setMarkPaidDialogOpen}
+            onConfirm={handleConfirmMarkPaid}
+            isProcessing={processingBillId === markPaidBill?.id}
           />
         </main>
       </IonContent>

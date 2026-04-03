@@ -1,16 +1,30 @@
+export type BillType = 'bill' | 'income';
 export type BillStatus = 'active' | 'archived';
 export type RecurringFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
-export type PaymentStatus = 'paid' | 'unpaid' | 'overdue' | 'partial';
+export type PaymentStatus = 'paid' | 'unpaid' | 'overdue' | 'partial' | 'received';
 
 export type Bill = {
   id: string;
+  type: BillType;
   name: string;
   amount: number;
   categoryId?: string;
+  category?: {
+    _id: string;
+    name: string;
+    type: string;
+    icon?: string;
+    color?: string;
+  };
   dueDate: string;
   isRecurring: boolean;
   recurringFrequency?: RecurringFrequency;
   walletId?: string;
+  wallet?: {
+    _id: string;
+    name: string;
+    type: string;
+  };
   reminder?: boolean;
   reminderDays?: number;
   notes?: string;
@@ -18,6 +32,7 @@ export type Bill = {
   paymentStatus: PaymentStatus;
   paidAmount?: number;
   paidDate?: string;
+  absenceDeduction?: number;
 };
 
 export type BillSummary = {
@@ -34,6 +49,7 @@ export type BillSummary = {
 export type CreateBillData = {
   name: string;
   amount: number;
+  type?: BillType;
   categoryId?: string;
   dueDate: string;
   isRecurring: boolean;
@@ -42,21 +58,24 @@ export type CreateBillData = {
   reminder?: boolean;
   reminderDays?: number;
   notes?: string;
+  absenceDeduction?: number;
 };
 
 export type UpdateBillData = {
   id: string;
   name?: string;
   amount?: number;
+  type?: BillType;
   categoryId?: string;
+  walletId?: string;
   dueDate?: string;
   isRecurring?: boolean;
   recurringFrequency?: RecurringFrequency;
-  walletId?: string;
   reminder?: boolean;
   reminderDays?: number;
   notes?: string;
   status?: BillStatus;
+  absenceDeduction?: number;
 };
 
 export type MarkPaidData = {
@@ -75,6 +94,7 @@ export type MarkUnpaidData = {
 export type ListBillsParams = {
   page?: string;
   limit?: string;
+  type?: BillType;
   paymentStatus?: PaymentStatus;
   isRecurring?: string;
   startDate?: string;
@@ -88,7 +108,7 @@ export type UpcomingBillsParams = {
 
 export type BillCalendarParams = {
   month?: string; // Format: YYYY-MM
-  year?: string;  // Format: YYYY
+  year?: string; // Format: YYYY
   startDate?: string; // Format: YYYY-MM-DD
-  endDate?: string;   // Format: YYYY-MM-DD
+  endDate?: string; // Format: YYYY-MM-DD
 };

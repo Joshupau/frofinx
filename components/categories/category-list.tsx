@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
-import { Plus, Trash2, LayoutGrid, List } from 'lucide-react'
+import { Plus, Trash2, LayoutGrid, List, Edit2 } from 'lucide-react'
 import CategoryModal from './category-modal'
 import { useListCategories, useArchiveCategory } from '@/queries/user/category/categories'
 import { CategoryCard } from '@/components/page/categories/category-card'
@@ -41,6 +41,7 @@ const normalizeCategory = (category: CategoryApiItem, index: number): CategoryVi
 
 export default function CategoryList() {
   const [open, setOpen] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<CategoryViewModel | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   const { data: categoryResponse, isLoading, refetch } = useListCategories()
@@ -116,7 +117,7 @@ export default function CategoryList() {
               <CategoryCard 
                 key={c.id} 
                 {...c} 
-                onEdit={() => {/* Handle Edit */}} 
+                onEdit={() => setSelectedCategory(c)} 
                 onArchive={handleArchive}
               />
             ) : (
@@ -137,13 +138,13 @@ export default function CategoryList() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                   <Button
+                  <Button
                     size="icon"
                     variant="ghost"
                     className="h-9 w-9 text-muted-foreground hover:text-foreground"
-                    onClick={() => {/* Handle Edit */}}
+                    onClick={() => setSelectedCategory(c)}
                   >
-                    <Trash2 className="w-4 h-4" /> {/* Should be edit icon actually, fixed below if needed */}
+                    <Edit2 className="w-4 h-4" />
                   </Button>
                   <Button
                     size="icon"
@@ -169,6 +170,7 @@ export default function CategoryList() {
       )}
 
       <CategoryModal open={open} onClose={() => setOpen(false)} />
+      <CategoryModal open={!!selectedCategory} onClose={() => setSelectedCategory(null)} category={selectedCategory} />
     </div>
   )
 }

@@ -6,6 +6,9 @@ import { Plus, LayoutGrid, List, Sparkles } from 'lucide-react'
 import BudgetModal from './budget-modal'
 import { useListBudgets, useUpdateBudget, useRolloverBudget } from '@/queries/user/budget/budgets'
 import { BudgetCard } from '@/components/page/budget/budget-card'
+import { useSettingsStore } from '@/store/settings-store'
+import { formatMoney } from '@/utils/formatter'
+import { BudgetPeriod } from '@/types/budget'
 
 interface BudgetViewModel {
   id: string
@@ -13,7 +16,7 @@ interface BudgetViewModel {
   amount: number
   spent: number
   remaining: number
-  period: string
+  period: BudgetPeriod
   alertThreshold: number
   category?: {
     id: string
@@ -55,7 +58,7 @@ const normalizeBudget = (budget: BudgetApiItem, index: number): BudgetViewModel 
     amount: budgetAmount,
     spent: spentAmount,
     remaining: remainingAmount,
-    period: budget.period || 'monthly',
+      period: (budget.period as BudgetPeriod) || 'monthly',
     alertThreshold: alertThreshold,
     category: budget.category,
     percentageUsed: percentageUsed,
@@ -66,10 +69,12 @@ const normalizeBudget = (budget: BudgetApiItem, index: number): BudgetViewModel 
 
 export default function BudgetList() {
   const [open, setOpen] = useState(false)
+  const [selectedBudget, setSelectedBudget] = useState<BudgetViewModel | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   const { data: budgetResponse, isLoading, refetch } = useListBudgets({ page: '0', limit: '100' })
   const { mutate: rolloverBudget } = useRolloverBudget()
+  const { currency, hideAmountsOnOpen } = useSettingsStore()
 
   const budgets = useMemo(() => {
     const responseData = budgetResponse?.data as
@@ -143,7 +148,7 @@ export default function BudgetList() {
               <BudgetCard 
                 key={b.id} 
                 {...b} 
-                onEdit={() => {/* Handle Edit */}} 
+                onEdit={() => setSelectedBudget(b)} 
                 onRollover={() => handleRollover(b.id)}
               />
             ) : (
@@ -164,7 +169,7 @@ export default function BudgetList() {
                    <div className="flex-1 max-w-xs mx-8 hidden md:block">
                         <div className="flex justify-between text-xs font-bold text-muted-foreground mb-1">
                             <span>{b.percentageUsed.toFixed(0)}% Used</span>
-                            <span>₱{b.spent.toLocaleString()} / ₱{b.amount.toLocaleString()}</span>
+                            <span>{formatMoney(b.spent, currency, hideAmountsOnOpen)} / {formatMoney(b.amount, currency, hideAmountsOnOpen)}</span>
                         </div>
                         <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
                             <div 
@@ -177,7 +182,7 @@ export default function BudgetList() {
                    <div className="flex items-center gap-4">
                         <div className="text-right">
                            <p className={`font-bold ${b.isOverBudget ? 'text-destructive' : 'text-foreground'}`}>
-                             ₱{b.remaining.toLocaleString()}
+                             {formatMoney(b.remaining, currency, hideAmountsOnOpen)}
                            </p>
                            <p className="text-xs text-muted-foreground uppercase">{b.isOverBudget ? 'Over Limit' : 'Left'}</p>
                         </div>
@@ -204,6 +209,7 @@ export default function BudgetList() {
       )}
 
       <BudgetModal open={open} onClose={() => setOpen(false)} />
+      <BudgetModal open={!!selectedBudget} onClose={() => setSelectedBudget(null)} budget={selectedBudget} />
     </div>
   )
 }

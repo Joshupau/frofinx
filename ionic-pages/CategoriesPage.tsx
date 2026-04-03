@@ -5,6 +5,7 @@ import { CategoriesHeader } from '@/components/page/categories/categories-header
 import { CategoryOverview } from '@/components/page/categories/category-overview'
 import CategoryModal from '@/components/categories/category-modal'
 import { useListCategories, useCategorySummary } from '@/queries/user/category/categories'
+import { useSettingsStore } from '@/store/settings-store'
 
 export default function CategoriesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -12,6 +13,7 @@ export default function CategoriesPage() {
   
   const { data: categoryResponse } = useListCategories()
   const { data: summaryResponse } = useCategorySummary()
+  const { currency } = useSettingsStore()
 
   const categoriesCount = useMemo(() => {
     const data = categoryResponse?.data
@@ -29,9 +31,9 @@ export default function CategoriesPage() {
       mostUsedCategory: summaryResponse?.data?.mostUsedCategory?.name || 'None',
       totalBudget: summaryResponse?.data?.totalBudget || 0,
       budgetAlerts: summaryResponse?.data?.budgetAlerts || 0,
-      currency: '₱'
+      currency,
     }
-  }, [categoriesCount, summaryResponse])
+  }, [categoriesCount, summaryResponse, currency])
 
   return (
     <IonPage>

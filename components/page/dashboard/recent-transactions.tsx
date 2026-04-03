@@ -4,6 +4,8 @@ import { useMemo } from 'react'
 import { ArrowUpRight, ArrowDownLeft } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useListTransactions } from '@/queries/user/transaction/transaction'
+import { useSettingsStore } from '@/store/settings-store'
+import { formatMoney } from '@/utils/formatter'
 
 interface TransactionViewModel {
   id: string
@@ -50,6 +52,7 @@ const normalizeTransaction = (transaction: TransactionApiItem, index: number): T
 
 export function RecentTransactions() {
   const { data: transactionResponse, isLoading } = useListTransactions({ limit: '5' })
+  const { currency, hideAmountsOnOpen } = useSettingsStore()
 
   const transactions = useMemo(() => {
     const responseData = transactionResponse?.data as
@@ -128,7 +131,7 @@ export function RecentTransactions() {
                       transaction.type === 'income' ? 'text-success' : 'text-foreground'
                     }`}
                   >
-                    {transaction.type === 'income' ? '+' : '-'}₱{transaction.amount.toFixed(2)}
+                    {transaction.type === 'income' ? '+' : '-'}{formatMoney(transaction.amount, currency, hideAmountsOnOpen)}
                   </p>
                   <p
                     className={`text-xs px-2 py-0.5 rounded-full inline-block mt-1 ${

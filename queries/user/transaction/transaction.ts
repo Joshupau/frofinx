@@ -68,9 +68,14 @@ const deleteTransaction = async (data: { id: string }) => {
 };
 
 export const useDeleteTransaction = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: Parameters<typeof deleteTransaction>[0]) =>
       deleteTransaction(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions-summary"] });
+    },
     onError: (error) => {
       handleApiError(error);
     },

@@ -1,10 +1,21 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { ArrowUpRight, ArrowDownLeft, Shuffle, Clock, Check, X } from 'lucide-react'
+import { ArrowUpRight, ArrowDownLeft, Shuffle, Clock, Check, X, MoreVertical } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { TransactionInlineEditor } from './transaction-inline-editor'
+import { useSettingsStore } from '@/store/settings-store'
+import { formatMoney } from '@/utils/formatter'
+import { UpdateTransactionData } from '@/types/transaction'
 
-interface TransactionItem {
+export interface TransactionItem {
   id: string
   title: string
   description: string
@@ -13,6 +24,13 @@ interface TransactionItem {
   type: 'income' | 'expense' | 'transfer'
   status: 'completed' | 'pending' | 'cancelled'
   category?: string
+  walletId?: string
+  categoryId?: string
+  toWalletId?: string
+  serviceFee?: number
+  tags?: string[]
+  attachments?: string[]
+  billId?: string
 }
 
 interface TransactionListProps {
@@ -20,12 +38,32 @@ interface TransactionListProps {
   isLoading?: boolean
   hasMore?: boolean
   isLoadingMore?: boolean
-  onTransactionClick?: (id: string) => void
+  onTransactionClick?: (transaction: TransactionItem) => void
+  onTransactionEdit?: (transaction: TransactionItem) => void
+  onTransactionDelete?: (transaction: TransactionItem) => void
+  onTransactionSave?: (data: UpdateTransactionData) => void
+  onTransactionCancelEdit?: () => void
+  editingTransactionId?: string | null
+  isSavingInlineEdit?: boolean
   onLoadMore?: () => void
 }
 
-export function TransactionList({ transactions, isLoading, hasMore = false, isLoadingMore = false, onTransactionClick, onLoadMore }: TransactionListProps) {
+export function TransactionList({
+  transactions,
+  isLoading,
+  hasMore = false,
+  isLoadingMore = false,
+  onTransactionClick,
+  onTransactionEdit,
+  onTransactionDelete,
+  onTransactionSave,
+  onTransactionCancelEdit,
+  editingTransactionId,
+  isSavingInlineEdit,
+  onLoadMore,
+}: TransactionListProps) {
   const sentinelRef = useRef<HTMLDivElement>(null)
+  const { currency, hideAmountsOnOpen } = useSettingsStore()
 
   // Setup IntersectionObserver for infinite scroll
   useEffect(() => {
@@ -88,8 +126,9 @@ export function TransactionList({ transactions, isLoading, hasMore = false, isLo
   }
 
   const formatAmount = (amount: number, type: string) => {
+    if (hideAmountsOnOpen) return '••••••'
     const prefix = type === 'income' ? '+' : type === 'expense' ? '-' : ''
-    return `${prefix}₱${Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    return `${prefix}${formatMoney(Math.abs(amount), currency, false)}`
   }
 
   const calculateDayTotals = (dayTransactions: TransactionItem[]) => {
@@ -180,43 +219,72 @@ export function TransactionList({ transactions, isLoading, hasMore = false, isLo
             {/* Transactions for this day */}
             <div className="space-y-2">
               {dayTransactions.map((transaction) => (
-                <button
+                <div
                   key={transaction.id}
-                  onClick={() => onTransactionClick?.(transaction.id)}
-                  className="w-full bg-card border border-border rounded-lg p-4 hover:border-primary hover:shadow-md transition-all duration-200 text-left group"
+                  className="w-full bg-card border border-border rounded-lg p-4 transition-all duration-200 text-left group hover:border-primary hover:shadow-md"
                 >
-                  <div className="flex items-center justify-between">
-                    {/* Left - Icon & Details */}
-                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => onTransactionClick?.(transaction)}
+                      className="flex flex-1 items-center gap-4 min-w-0 text-left"
+                    >
+                      {/* Left - Icon & Details */}
                       <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 transition-colors">
                         {getIcon(transaction.type)}
                       </div>
-                      
+
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-foreground truncate">{transaction.title}</p>
                         <p className="text-sm text-muted-foreground truncate">{transaction.description}</p>
                       </div>
-                    </div>
 
-                    {/* Right - Amount & Status */}
-                    <div className="flex items-center gap-4 flex-shrink-0 ml-4">
-                      <div className="text-right">
-                        <p className={`font-bold ${
-                          transaction.type === 'income' ? 'text-success' : 
-                          transaction.type === 'expense' ? 'text-destructive' : 
-                          'text-foreground'
-                        }`}>
-                          {formatAmount(transaction.amount, transaction.type)}
-                        </p>
+                      {/* Right - Amount & Status */}
+                      <div className="flex items-center gap-4 flex-shrink-0 ml-4">
+                        <div className="text-right">
+                          <p className={`font-bold ${
+                            transaction.type === 'income' ? 'text-success' : 
+                            transaction.type === 'expense' ? 'text-destructive' : 
+                            'text-foreground'
+                          }`}>
+                            {formatAmount(transaction.amount, transaction.type)}
+                          </p>
+                        </div>
+
+                        <Badge className={`flex items-center gap-1 flex-shrink-0 ${getStatusBadge(transaction.status)}`}>
+                          {getStatusIcon(transaction.status)}
+                          <span className="hidden sm:inline capitalize text-xs">{transaction.status}</span>
+                        </Badge>
                       </div>
+                    </button>
 
-                      <Badge className={`flex items-center gap-1 flex-shrink-0 ${getStatusBadge(transaction.status)}`}>
-                        {getStatusIcon(transaction.status)}
-                        <span className="hidden sm:inline capitalize text-xs">{transaction.status}</span>
-                      </Badge>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 opacity-80 hover:opacity-100">
+                          <MoreVertical className="h-4 w-4" />
+                          <span className="sr-only">Transaction actions</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onSelect={() => onTransactionEdit?.(transaction)}>
+                          Edit transaction
+                        </DropdownMenuItem>
+                        <DropdownMenuItem variant="destructive" onSelect={() => onTransactionDelete?.(transaction)}>
+                          Delete transaction
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                </button>
+
+                  {editingTransactionId === transaction.id && onTransactionSave && onTransactionCancelEdit && (
+                    <TransactionInlineEditor
+                      transaction={transaction}
+                      onSave={onTransactionSave}
+                      onCancel={onTransactionCancelEdit}
+                      isSaving={isSavingInlineEdit}
+                    />
+                  )}
+                </div>
               ))}
             </div>
 
@@ -226,10 +294,10 @@ export function TransactionList({ transactions, isLoading, hasMore = false, isLo
               return (
                 <div className="flex justify-end gap-6 px-2 mt-3 text-sm font-semibold">
                   <div className="text-right">
-                    <p className="text-success text-sm">+₱{income.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    <p className="text-success text-sm">{hideAmountsOnOpen ? '••••••' : `+${formatMoney(income, currency, false)}`}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-destructive text-sm">-₱{expense.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    <p className="text-destructive text-sm">{hideAmountsOnOpen ? '••••••' : `-${formatMoney(expense, currency, false)}`}</p>
                   </div>
                 </div>
               )

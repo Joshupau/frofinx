@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import BillDetail from './bill-detail'
 import { useListBills, useMarkBillPaid } from '@/queries/user/bill/bills'
+import { useSettingsStore } from '@/store/settings-store'
+import { formatMoney } from '@/utils/formatter'
 
 interface BillViewModel {
   id: string
@@ -46,6 +48,7 @@ export default function BillList() {
 
   const { data: billResponse, isLoading, refetch } = useListBills()
   const { mutate: markPaid } = useMarkBillPaid()
+  const { currency, hideAmountsOnOpen } = useSettingsStore()
 
   const bills = useMemo(() => {
     const responseData = billResponse?.data as
@@ -105,7 +108,7 @@ export default function BillList() {
                 <div className="text-sm text-muted-foreground">Due {b.dueDate}</div>
               </div>
               <div className="flex items-center gap-2">
-                <div className="font-semibold">${b.amount.toFixed(2)}</div>
+                <div className="font-semibold">{formatMoney(b.amount, currency, hideAmountsOnOpen)}</div>
                 <div className="flex gap-2">
                   <Button
                     size="sm"

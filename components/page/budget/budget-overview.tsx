@@ -3,6 +3,8 @@
 import { Wallet, TrendingUp, AlertCircle, PieChart, Info, ArrowUpRight } from 'lucide-react'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
+import { useSettingsStore } from '@/store/settings-store'
+import { formatMoney } from '@/utils/formatter'
 
 interface BudgetOverviewProps {
   totalBudgeted: number
@@ -10,7 +12,7 @@ interface BudgetOverviewProps {
   totalRemaining: number
   activeBudgets: number
   exceededBudgets: number
-  currency: string
+  currency?: string
   burnRate?: number
   message?: string
 }
@@ -25,14 +27,10 @@ export function BudgetOverview({
   burnRate = 0,
   message
 }: BudgetOverviewProps) {
+  const { currency: settingsCurrency, hideAmountsOnOpen } = useSettingsStore()
+  const resolvedCurrency = currency || settingsCurrency
   const percentageSpent = totalBudgeted > 0 ? (totalSpent / totalBudgeted) * 100 : 0
-  
-  const formatValue = (val: number) => {
-    return `${currency}${val.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`
-  }
+  const formatValue = (val: number) => formatMoney(val, resolvedCurrency, hideAmountsOnOpen)
 
   return (
     <div className="space-y-6 mb-8">

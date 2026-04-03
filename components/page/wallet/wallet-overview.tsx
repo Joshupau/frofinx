@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
 import { TrendingUp, Wallet, PiggyBank, CreditCard, Eye, EyeOff } from 'lucide-react'
+import { useSettingsStore } from '@/store/settings-store'
+import { formatMoney } from '@/utils/formatter'
 
 interface WalletOverviewProps {
   totalBalance: number
@@ -20,83 +21,63 @@ export function WalletOverview({
   monthlyIncome,
   monthlyExpense,
 }: WalletOverviewProps) {
-  const balance = totalBalance.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })
-
-  const income = monthlyIncome.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })
-
-  const expense = monthlyExpense.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })
-
-  const [showValues, setShowValues] = useState(false)
-
-  const maskValue = (value: string) => (showValues ? value : '••••••')
+  const { hideAmountsOnOpen } = useSettingsStore()
+  const showAmounts = !hideAmountsOnOpen
 
   return (
     <div>
       <div className="flex justify-end mb-4">
-        <button
-          onClick={() => setShowValues((prev) => !prev)}
-          className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
-          aria-label={showValues ? 'Hide balances' : 'Show balances'}
-        >
-          {showValues ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-        </button>
+        <div className="p-2 rounded-lg bg-secondary text-muted-foreground" aria-hidden="true">
+          {showAmounts ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+        </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
         {/* Total Balance Card */}
-        <div className="bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 rounded-lg p-6">
+        <div className="bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 rounded-lg p-3 sm:p-6 min-w-0">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-medium text-muted-foreground">Total Balance</p>
-            <div className="p-2.5 bg-primary/20 rounded-lg">
-              <Wallet className="w-5 h-5 text-primary" />
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Balance</p>
+            <div className="p-2 bg-primary/20 rounded-lg shrink-0">
+              <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-foreground">{maskValue(`${currency} ${balance}`)}</p>
-          <p className="text-xs text-muted-foreground mt-2">Across {activeWallets} active wallet{activeWallets !== 1 ? 's' : ''}</p>
+          <p className="text-lg sm:text-2xl font-bold text-foreground truncate">{formatMoney(totalBalance, currency, !showAmounts)}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-2">Across {activeWallets} active wallet{activeWallets !== 1 ? 's' : ''}</p>
         </div>
 
         {/* Active Wallets Card */}
-        <div className="bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/30 rounded-lg p-6">
+        <div className="bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/30 rounded-lg p-3 sm:p-6 min-w-0">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-medium text-muted-foreground">Active Wallets</p>
-            <div className="p-2.5 bg-accent/20 rounded-lg">
-              <CreditCard className="w-5 h-5 text-accent" />
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground">Active Wallets</p>
+            <div className="p-2 bg-accent/20 rounded-lg shrink-0">
+              <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-foreground">{activeWallets}</p>
-          <p className="text-xs text-muted-foreground mt-2">of {totalWallets} total</p>
+          <p className="text-lg sm:text-2xl font-bold text-foreground truncate">{activeWallets}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-2">of {totalWallets} total</p>
         </div>
 
         {/* Monthly Income Card */}
-        <div className="bg-gradient-to-br from-success/20 to-success/5 border border-success/30 rounded-lg p-6">
+        <div className="bg-gradient-to-br from-success/20 to-success/5 border border-success/30 rounded-lg p-3 sm:p-6 min-w-0">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-medium text-muted-foreground">This Month Income</p>
-            <div className="p-2.5 bg-success/20 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-success" />
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground">This Month Income</p>
+            <div className="p-2 bg-success/20 rounded-lg shrink-0">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-success" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-foreground">{maskValue(`${currency} ${income}`)}</p>
-          <p className="text-xs text-success mt-2">+12.5% from last month</p>
+          <p className="text-lg sm:text-2xl font-bold text-foreground truncate">{formatMoney(monthlyIncome, currency, !showAmounts)}</p>
+          <p className="text-[10px] sm:text-xs text-success mt-2">+12.5% from last month</p>
         </div>
 
         {/* Monthly Expense Card */}
-        <div className="bg-gradient-to-br from-warning/20 to-warning/5 border border-warning/30 rounded-lg p-6">
+        <div className="bg-gradient-to-br from-warning/20 to-warning/5 border border-warning/30 rounded-lg p-3 sm:p-6 min-w-0">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-medium text-muted-foreground">This Month Expense</p>
-            <div className="p-2.5 bg-warning/20 rounded-lg">
-              <PiggyBank className="w-5 h-5 text-warning" />
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground">This Month Expense</p>
+            <div className="p-2 bg-warning/20 rounded-lg shrink-0">
+              <PiggyBank className="w-4 h-4 sm:w-5 sm:h-5 text-warning" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-foreground">{maskValue(`${currency} ${expense}`)}</p>
-          <p className="text-xs text-warning mt-2">-8.3% from last month</p>
+          <p className="text-lg sm:text-2xl font-bold text-foreground truncate">{formatMoney(monthlyExpense, currency, !showAmounts)}</p>
+          <p className="text-[10px] sm:text-xs text-warning mt-2">-8.3% from last month</p>
         </div>
       </div>
     </div>

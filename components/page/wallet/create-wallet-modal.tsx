@@ -1,17 +1,33 @@
 'use client'
 
-import { useState } from 'react'
-import { X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useCreateWallet } from '@/queries/user/wallet/wallets'
-import { CreateWalletData, WalletType } from '@/types/wallet'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
+import { useCreateWallet, useUpdateWallet } from '@/queries/user/wallet/wallets'
+import { CreateWalletData, UpdateWalletData, WalletType } from '@/types/wallet'
 
 interface CreateWalletModalProps {
   open: boolean
   onClose: () => void
   onSuccess?: () => void
+  wallet?: {
+    id: string
+    name?: string
+    type?: WalletType
+    color?: string
+    icon?: string
+    description?: string
+    accountNumber?: string
+  } | null
 }
 
 const initialFormData: CreateWalletData = {
@@ -32,9 +48,31 @@ const walletTypes: Array<{ value: WalletType; label: string }> = [
   { value: 'other', label: 'Other' },
 ]
 
-export function CreateWalletModal({ open, onClose, onSuccess }: CreateWalletModalProps) {
+export function CreateWalletModal({ open, onClose, onSuccess, wallet }: CreateWalletModalProps) {
   const [formData, setFormData] = useState<CreateWalletData>(initialFormData)
   const { mutate: createWallet, isPending } = useCreateWallet()
+  const { mutate: updateWallet, isPending: isUpdating } = useUpdateWallet()
+  const isEdit = !!wallet
+
+  useEffect(() => {
+    if (!open) return
+
+    if (wallet) {
+      setFormData({
+        name: wallet.name || '',
+        type: wallet.type || 'bank',
+        balance: undefined,
+        currency: undefined,
+        color: wallet.color || '#0066CC',
+        icon: wallet.icon || '',
+        description: wallet.description || '',
+        accountNumber: wallet.accountNumber || '',
+      })
+      return
+    }
+
+    setFormData(initialFormData)
+  }, [open, wallet])
 
   const handleFieldChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -80,6 +118,27 @@ export function CreateWalletModal({ open, onClose, onSuccess }: CreateWalletModa
       return
     }
 
+    if (isEdit && wallet) {
+      const updateData: UpdateWalletData = {
+        id: wallet.id,
+        name: formData.name,
+        type: formData.type,
+        color: formData.color,
+        icon: formData.icon,
+        description: formData.description,
+        accountNumber: formData.accountNumber,
+      }
+
+      updateWallet(updateData, {
+        onSuccess: () => {
+          toast.success('Wallet updated successfully!')
+          onClose()
+          onSuccess?.()
+        },
+      })
+      return
+    }
+
     createWallet(formData, {
       onSuccess: () => {
         toast.success('Wallet created successfully!')
@@ -93,21 +152,16 @@ export function CreateWalletModal({ open, onClose, onSuccess }: CreateWalletModa
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-lg border border-border bg-card shadow-lg">
-        <div className="flex items-center justify-between border-b border-border p-6">
-          <h2 className="text-lg font-semibold text-foreground">Create New Wallet</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-muted-foreground transition-colors hover:text-foreground"
-            aria-label="Close"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+    <Sheet open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+      <SheetContent className="sm:max-w-xl">
+        <SheetHeader>
+          <SheetTitle>{isEdit ? 'Edit Wallet' : 'Create New Wallet'}</SheetTitle>
+          <SheetDescription>
+            {isEdit ? 'Update the wallet details that can be edited here.' : 'Create a wallet for cash, bank, or cards.'}
+          </SheetDescription>
+        </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 p-6">
+        <form onSubmit={handleSubmit} className="flex-1 space-y-4 overflow-y-auto px-6 pb-6 pt-2">
           <div className="space-y-2">
             <label htmlFor="name" className="block text-sm font-medium text-foreground">
               Wallet Name *
@@ -140,36 +194,38 @@ export function CreateWalletModal({ open, onClose, onSuccess }: CreateWalletModa
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <label htmlFor="balance" className="block text-sm font-medium text-foreground">
-                Initial Balance
-              </label>
-              <Input
-                id="balance"
-                type="number"
-                name="balance"
-                min="0"
-                step="0.01"
-                value={formData.balance ?? ''}
-                onChange={handleFieldChange}
-                placeholder="0.00"
-              />
-            </div>
+          {!isEdit && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label htmlFor="balance" className="block text-sm font-medium text-foreground">
+                  Initial Balance
+                </label>
+                <Input
+                  id="balance"
+                  type="number"
+                  name="balance"
+                  min="0"
+                  step="0.01"
+                  value={formData.balance ?? ''}
+                  onChange={handleFieldChange}
+                  placeholder="0.00"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <label htmlFor="currency" className="block text-sm font-medium text-foreground">
-                Currency
-              </label>
-              <Input
-                id="currency"
-                name="currency"
-                value={formData.currency ?? ''}
-                onChange={handleFieldChange}
-                placeholder="$"
-              />
+              <div className="space-y-2">
+                <label htmlFor="currency" className="block text-sm font-medium text-foreground">
+                  Currency
+                </label>
+                <Input
+                  id="currency"
+                  name="currency"
+                  value={formData.currency ?? ''}
+                  onChange={handleFieldChange}
+                  placeholder="$"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
@@ -228,16 +284,16 @@ export function CreateWalletModal({ open, onClose, onSuccess }: CreateWalletModa
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
+          <SheetFooter className="px-0 pt-2 border-t-0">
+            <Button type="button" variant="outline" onClick={onClose} disabled={isPending || isUpdating}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? 'Creating...' : 'Create Wallet'}
+            <Button type="submit" disabled={isPending || isUpdating}>
+              {isPending || isUpdating ? (isEdit ? 'Saving...' : 'Creating...') : isEdit ? 'Save Changes' : 'Create Wallet'}
             </Button>
-          </div>
+          </SheetFooter>
         </form>
-      </div>
-    </div>
+      </SheetContent>
+    </Sheet>
   )
 }

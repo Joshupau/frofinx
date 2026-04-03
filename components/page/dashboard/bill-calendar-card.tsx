@@ -19,6 +19,8 @@ import {
   startOfWeek,
 } from 'date-fns'
 import { enUS } from 'date-fns/locale'
+import { useSettingsStore } from '@/store/settings-store'
+import { formatMoney } from '@/utils/formatter'
 
 type BillApiItem = {
   _id?: string
@@ -56,13 +58,8 @@ const localizer = dateFnsLocalizer({
   locales,
 })
 
-const formatPeso = (value: number) =>
-  `P${value.toLocaleString('en-US', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  })}`
-
 function BillEvent({ event }: EventProps<BillCalendarEvent>) {
+  const { currency, hideAmountsOnOpen } = useSettingsStore()
   const isPaid = event.resource.status === 'paid'
   const isOverdue = !isPaid && new Date(event.resource.date) < new Date()
   
@@ -80,14 +77,14 @@ function BillEvent({ event }: EventProps<BillCalendarEvent>) {
         ) : (
           <CreditCard className="w-2.5 h-2.5" />
         )}
-        <span className="bill-badge-amount">{formatPeso(event.resource.amount)}</span>
+        <span className="bill-badge-amount">{formatMoney(event.resource.amount, currency, hideAmountsOnOpen)}</span>
       </div>
 
       <div className="bill-event-hovercard" role="tooltip">
         <p className="bill-hover-title">{event.title}</p>
         <div className="bill-hover-grid">
           <span className="bill-hover-label">Amount</span>
-          <span className="bill-hover-value">P{event.resource.amount.toLocaleString()}</span>
+          <span className="bill-hover-value">{formatMoney(event.resource.amount, currency, hideAmountsOnOpen)}</span>
           <span className="bill-hover-label">Status</span>
           <span className={`bill-hover-value ${isPaid ? 'bill-hover-paid' : 'bill-hover-unpaid'}`}>
             {event.resource.status}
@@ -185,9 +182,10 @@ export function BillCalendarCard() {
   }, [])
 
   const tooltipAccessor = React.useCallback((event: BillCalendarEvent) => {
+    const { currency, hideAmountsOnOpen } = useSettingsStore.getState()
     const parts = [
       event.title,
-      `Amount: ${formatPeso(event.resource.amount)}`,
+      `Amount: ${formatMoney(event.resource.amount, currency, hideAmountsOnOpen)}`,
       `Status: ${event.resource.status}`,
       `Due: ${event.resource.date}`,
     ]

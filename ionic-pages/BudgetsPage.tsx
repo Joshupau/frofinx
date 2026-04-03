@@ -7,6 +7,7 @@ import { BudgetsHeader } from '@/components/page/budget/budgets-header'
 import { BudgetOverview } from '@/components/page/budget/budget-overview'
 import BudgetModal from '@/components/budgets/budget-modal'
 import { useBudgetSummary, useBudgetPerformance } from '@/queries/user/budget/budgets'
+import { useSettingsStore } from '@/store/settings-store'
 
 export default function BudgetsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -14,6 +15,7 @@ export default function BudgetsPage() {
   
   const { data: summaryResponse } = useBudgetSummary()
   const { data: performanceResponse } = useBudgetPerformance()
+  const { currency } = useSettingsStore()
 
   const summary = useMemo(() => {
     const data = summaryResponse?.data
@@ -25,9 +27,9 @@ export default function BudgetsPage() {
       exceededBudgets: data?.exceededBudgets || 0,
       burnRate: performanceResponse?.data?.overallBurnRate || 0,
       performanceMessage: performanceResponse?.data?.message || '',
-      currency: '₱'
+      currency,
     }
-  }, [summaryResponse, performanceResponse])
+  }, [summaryResponse, performanceResponse, currency])
 
   return (
     <IonPage>

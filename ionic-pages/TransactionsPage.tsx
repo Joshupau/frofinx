@@ -14,12 +14,14 @@ import { IonContent, IonPage } from '@ionic/react'
 import { DashboardHeader } from '@/components/page/dashboard/dashboard-header'
 import { TransactionStats } from '@/components/page/transaction/transaction-stats'
 import { FilterState, TransactionFilters } from '@/components/page/transaction/transaction-filter'
-import { TransactionList } from '@/components/page/transaction/transaction-list'
-import { useListTransactions, useTransactionsSummary } from '@/queries/user/transaction/transaction'
+import { TransactionItem, TransactionList } from '@/components/page/transaction/transaction-list'
+import { useDeleteTransaction, useListTransactions, useTransactionsSummary, useUpdateTransaction } from '@/queries/user/transaction/transaction'
 import { useListWallets } from '@/queries/user/wallet/wallets'
 import { ListTransactionsParams } from '@/types/transaction'
 import { CreateTransactionModal } from '@/components/page/transaction/create-transaction-modal'
 import { TransactionImportModal } from '@/components/page/transaction/transaction-import-modal'
+import { DeleteTransactionDialog } from '@/components/page/transaction/delete-transaction-dialog'
+import toast from 'react-hot-toast'
 
 // Helper function to convert filter state to API params
 const convertFilterToParams = (filters: FilterState): ListTransactionsParams => {
@@ -85,9 +87,11 @@ export function TransactionsPage() {
     search: '',
   })
   const [showFilters, setShowFilters] = useState(false)
-  const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null)
+  const [editingTransaction, setEditingTransaction] = useState<TransactionItem | null>(null)
+  const [sheetEditingTransaction, setSheetEditingTransaction] = useState<TransactionItem | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
+  const [transactionToDelete, setTransactionToDelete] = useState<TransactionItem | null>(null)
   const [page, setPage] = useState(0)
   const [limit, setLimit] = useState(10)
   const [allTransactions, setAllTransactions] = useState<any[]>([])
@@ -112,6 +116,8 @@ export function TransactionsPage() {
   const { data: apiResponse, isLoading, error, refetch } = useListTransactions(apiParams);
   // Fetch summary stats
   const { data: summaryData, isLoading: summaryLoading } = useTransactionsSummary(apiParams);
+  const { mutate: deleteTransaction, isPending: isDeleting } = useDeleteTransaction()
+  const { mutate: updateTransaction, isPending: isUpdatingTransaction } = useUpdateTransaction()
   
   // Extract transactions and pagination info from API response
   const currentPageTransactions = useMemo(() => {
@@ -150,6 +156,55 @@ export function TransactionsPage() {
       setPage(prev => prev + 1);
     }
   };
+
+  const handleStartInlineEdit = (transaction: TransactionItem) => {
+    setEditingTransaction(transaction)
+  }
+
+  const handleOpenSheetEdit = (transaction: TransactionItem) => {
+    setSheetEditingTransaction(transaction)
+  }
+
+  const handleCancelInlineEdit = () => {
+    setEditingTransaction(null)
+  }
+
+  const handleSaveInlineEdit = (data: { id: string; walletId?: string; categoryId?: string; amount?: number; type?: 'income' | 'expense' | 'transfer'; description?: string; date?: string; status?: 'completed' | 'pending' | 'cancelled' }) => {
+    updateTransaction(data, {
+      onSuccess: () => {
+        toast.success('Transaction updated successfully')
+        setEditingTransaction(null)
+        refetch()
+      },
+      onError: () => {
+        // keep editor open so the user can correct and retry
+      },
+    })
+  }
+
+  const handleDeleteTransaction = (transaction: TransactionItem) => {
+    setTransactionToDelete(transaction)
+  }
+
+  const handleConfirmDeleteTransaction = () => {
+    if (!transactionToDelete) return
+
+    deleteTransaction(
+      { id: transactionToDelete.id },
+      {
+        onSuccess: () => {
+          toast.success('Transaction deleted successfully')
+          setTransactionToDelete(null)
+          if (editingTransaction?.id === transactionToDelete.id) {
+            setEditingTransaction(null)
+          }
+        },
+        onError: () => {
+          setTransactionToDelete(null)
+        },
+      }
+    )
+  }
 
   // Use summary stats from API
   const stats = {
@@ -254,7 +309,13 @@ export function TransactionsPage() {
                   isLoading={isLoading && page === 0}
                   hasMore={page + 1 < totalPagesCount}
                   isLoadingMore={isLoadingMore}
-                  onTransactionClick={setSelectedTransaction}
+                  onTransactionClick={handleStartInlineEdit}
+                  onTransactionEdit={handleOpenSheetEdit}
+                  onTransactionDelete={handleDeleteTransaction}
+                  onTransactionSave={handleSaveInlineEdit}
+                  onTransactionCancelEdit={handleCancelInlineEdit}
+                  editingTransactionId={editingTransaction?.id ?? null}
+                  isSavingInlineEdit={isUpdatingTransaction}
                   onLoadMore={handleLoadMore}
                 />
               </div>
@@ -275,6 +336,24 @@ export function TransactionsPage() {
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSuccess={() => refetch()}
+      />
+
+      <CreateTransactionModal
+        open={!!sheetEditingTransaction}
+        onClose={() => setSheetEditingTransaction(null)}
+        onSuccess={() => refetch()}
+        title="Edit Transaction"
+        transaction={sheetEditingTransaction}
+      />
+
+      <DeleteTransactionDialog
+        open={!!transactionToDelete}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setTransactionToDelete(null)
+        }}
+        onConfirm={handleConfirmDeleteTransaction}
+        transaction={transactionToDelete}
+        isDeleting={isDeleting}
       />
     </IonPage>
   )

@@ -4,6 +4,8 @@ import { MoreVertical, Trash2, Edit2, RotateCcw, AlertTriangle, CheckCircle2, Mo
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { useSettingsStore } from '@/store/settings-store'
+import { formatMoney } from '@/utils/formatter'
 
 interface BudgetCardProps {
   id: string
@@ -43,13 +45,10 @@ export function BudgetCard({
   onRollover,
 }: BudgetCardProps) {
   const [showMenu, setShowMenu] = useState(false)
-  const currencySymbol = '₱'
+  const { currency, hideAmountsOnOpen } = useSettingsStore()
 
   const formatValue = (val: number) => {
-    return `${currencySymbol}${val.toLocaleString('en-US', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    })}`
+    return formatMoney(val, currency, hideAmountsOnOpen)
   }
 
   const getProgressColor = () => {

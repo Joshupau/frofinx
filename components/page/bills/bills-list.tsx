@@ -19,8 +19,12 @@ import {
   MoreVertical,
   Pencil,
   Trash2,
+  TrendingUp,
+  MinusCircle,
+  CalendarCheck,
 } from 'lucide-react'
-import { formatCurrency, formatDate, formatDueDateLabel, getDaysFromToday } from '@/utils/formatter'
+import { formatDate, formatDueDateLabel, getDaysFromToday, formatMoney } from '@/utils/formatter'
+import { useSettingsStore } from '@/store/settings-store'
 
 interface BillsListProps {
   bills: Bill[]
@@ -40,6 +44,7 @@ const paymentBadgeStyles: Record<PaymentStatus, string> = {
   unpaid: 'bg-secondary text-foreground border border-border',
   overdue: 'bg-destructive/15 text-destructive border border-destructive/30',
   partial: 'bg-warning/15 text-warning border border-warning/30',
+  received: 'bg-success/15 text-success border border-success/30',
 }
 
 const paymentIcons: Record<PaymentStatus, React.ReactNode> = {
@@ -47,6 +52,7 @@ const paymentIcons: Record<PaymentStatus, React.ReactNode> = {
   unpaid: <CircleDashed className="w-3.5 h-3.5" />,
   overdue: <CircleAlert className="w-3.5 h-3.5" />,
   partial: <RefreshCcw className="w-3.5 h-3.5" />,
+  received: <CircleCheck className="w-3.5 h-3.5" />,
 }
 
 const sortByDueDate = (items: Bill[]): Bill[] => {
@@ -74,6 +80,8 @@ export function BillsList({
   onDelete,
   processingBillId,
 }: BillsListProps) {
+  const { currency, hideAmountsOnOpen } = useSettingsStore()
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -88,8 +96,8 @@ export function BillsList({
     return (
       <Card className="py-0">
         <CardContent className="p-12 text-center">
-          <p className="text-lg font-semibold text-foreground">No bills found</p>
-          <p className="text-sm text-muted-foreground mt-1">Try adjusting your filters or create a new bill to get started.</p>
+          <p className="text-lg font-semibold text-foreground">No entries found</p>
+          <p className="text-sm text-muted-foreground mt-1">Try adjusting your filters or create a new bill or income entry to get started.</p>
         </CardContent>
       </Card>
     )
@@ -100,20 +108,35 @@ export function BillsList({
       {sortByDueDate(bills).map((bill) => {
         const dueDays = getDaysFromToday(bill.dueDate)
         const isOverdue = typeof dueDays === 'number' && dueDays < 0
-        const showMarkPaid = bill.paymentStatus !== 'paid'
+        const isIncome = bill.type === 'income'
+        const isSettled = bill.paymentStatus === 'paid' || bill.paymentStatus === 'received'
+        const showMarkPaid = !isSettled
+        const markActionLabel = isIncome ? (showMarkPaid ? 'Mark Received' : 'Mark Unreceived') : (showMarkPaid ? 'Mark Paid' : 'Mark Unpaid')
+        const cardTone = isOverdue
+          ? 'border-warning/40 bg-gradient-to-br from-warning/15 via-warning/6 to-transparent shadow-sm shadow-warning/10'
+          : isIncome
+            ? 'border-success/30 bg-gradient-to-br from-success/12 via-success/5 to-transparent'
+            : 'border-destructive/20 bg-gradient-to-br from-destructive/8 via-destructive/4 to-transparent'
+        const statusTone = isOverdue ? 'text-warning' : isIncome ? 'text-success' : 'text-destructive'
+        const walletName = bill.wallet?.name || bill.walletId
+        const categoryName = bill.category?.name || bill.categoryId
 
         return (
           <Card
             key={bill.id}
-            className={`py-0 border transition-all duration-200 ${
-              isOverdue ? 'border-destructive/35 bg-gradient-to-r from-destructive/8 to-transparent' : 'border-border hover:border-primary/30'
-            }`}
+            className={`py-0 border transition-all duration-200 hover:shadow-md ${cardTone}`}
           >
             <CardContent className="p-4 sm:p-5">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div className="space-y-3 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-base font-semibold text-foreground truncate">{bill.name}</p>
+                    {isIncome && (
+                      <Badge variant="outline" className="gap-1 border-success/40 text-success">
+                        <TrendingUp className="w-3.5 h-3.5" />
+                        Income
+                      </Badge>
+                    )}
                     <Badge className={paymentBadgeStyles[bill.paymentStatus]}>
                       {paymentIcons[bill.paymentStatus]}
                       <span className="capitalize">{bill.paymentStatus}</span>
@@ -132,21 +155,39 @@ export function BillsList({
                       <CalendarDays className="w-4 h-4" />
                       <span>{bill.dueDate ? formatDate(bill.dueDate) : 'No due date'}</span>
                     </div>
-                    <div className={`text-sm font-medium ${isOverdue ? 'text-destructive' : 'text-muted-foreground'}`}>
+                    <div className={`text-sm font-medium ${statusTone}`}>
                       {bill.dueDate ? formatDueDateLabel(bill.dueDate) : 'No due date'}
                     </div>
-                    {bill.walletId && (
+                    {categoryName && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <span className="inline-flex h-2 w-2 rounded-full bg-muted-foreground/60" />
+                        <span>{categoryName}</span>
+                      </div>
+                    )}
+                    {walletName && (
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Wallet className="w-4 h-4" />
-                        <span>{bill.walletId}</span>
+                        <span>{walletName}</span>
+                      </div>
+                    )}
+                    {bill.absenceDeduction != null && bill.absenceDeduction > 0 && (
+                      <div className="flex items-center gap-1.5 text-warning">
+                        <MinusCircle className="w-4 h-4" />
+                        <span className="font-medium">{formatMoney(bill.absenceDeduction, currency, hideAmountsOnOpen)} absence deduction</span>
+                      </div>
+                    )}
+                    {bill.paidDate && (
+                      <div className="flex items-center gap-1.5 text-success">
+                        <CalendarCheck className="w-4 h-4" />
+                        <span className="font-medium">{isIncome ? 'Received' : 'Paid'} {formatDate(bill.paidDate)}</span>
                       </div>
                     )}
                   </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
-                  <p className={`text-xl font-bold ${isOverdue ? 'text-destructive' : 'text-foreground'}`}>
-                    {formatCurrency(bill.amount)}
+                  <p className={`text-xl font-bold ${statusTone}`}>
+                    {formatMoney(bill.amount, currency, hideAmountsOnOpen)}
                   </p>
                   <div className="flex items-center gap-2">
                     <Button
@@ -155,7 +196,7 @@ export function BillsList({
                       disabled={processingBillId === bill.id}
                       className="flex-1 sm:min-w-28"
                     >
-                      {processingBillId === bill.id ? 'Saving...' : showMarkPaid ? 'Mark Paid' : 'Mark Unpaid'}
+                      {processingBillId === bill.id ? 'Saving...' : markActionLabel}
                     </Button>
 
                     <DropdownMenu>
@@ -189,7 +230,7 @@ export function BillsList({
       {hasMore && (
         <div className="flex justify-center pt-2">
           <Button variant="outline" onClick={onLoadMore} disabled={isLoadingMore}>
-            {isLoadingMore ? 'Loading...' : 'Load More Bills'}
+            {isLoadingMore ? 'Loading...' : 'Load More'}
           </Button>
         </div>
       )}

@@ -1,5 +1,7 @@
- export const replaceSpacesWithPlus = (input: string): string => {
-      return input.replace(/ /g, '+')
+import { getCurrencySymbol } from '@/types/settings'
+
+export const replaceSpacesWithPlus = (input: string): string => {
+  return input.replace(/ /g, '+')
 }
 
 // format date
@@ -8,8 +10,22 @@ export const formatDate = (dateString: string): string => {
   return new Date(dateString).toLocaleDateString(undefined, options)
 }
 
-export const formatCurrency = (amount: number, currencySymbol = '₱'): string => {
+export const formatCurrency = (amount: number, currencySymbol = getCurrencySymbol('PHP')): string => {
   return `${currencySymbol}${amount.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`
+}
+
+export const formatMoney = (
+  amount: number,
+  currency: string = 'PHP',
+  hidden = false
+): string => {
+  if (hidden) return '••••••'
+
+  const symbol = getCurrencySymbol(currency as keyof typeof import('@/types/settings').CURRENCY_SYMBOLS) || currency
+  return `${symbol}${amount.toLocaleString('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`

@@ -8,12 +8,13 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Search, X } from 'lucide-react'
-import { BillStatus, PaymentStatus } from '@/types/bill'
+import { BillStatus, BillType, PaymentStatus } from '@/types/bill'
 
 export interface BillsFilterState {
   search: string
   paymentStatus: PaymentStatus | 'all'
   status: BillStatus | 'all'
+  type: BillType | 'all'
   recurrence: 'all' | 'recurring' | 'one-time'
   dueWindow: 'all' | '7' | '30' | '90'
 }
@@ -32,6 +33,7 @@ export function BillsFilters({ filters, onChange, onReset }: BillsFiltersProps) 
   const activeFilterCount = Number(Boolean(filters.search))
     + Number(filters.paymentStatus !== 'all')
     + Number(filters.status !== 'all')
+    + Number(filters.type !== 'all')
     + Number(filters.recurrence !== 'all')
     + Number(filters.dueWindow !== 'all')
 
@@ -65,7 +67,18 @@ export function BillsFilters({ filters, onChange, onReset }: BillsFiltersProps) 
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <Select value={filters.type} onValueChange={(value) => updateFilter('type', value as BillsFilterState['type'])}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="bill">Bills</SelectItem>
+            <SelectItem value="income">Income</SelectItem>
+          </SelectContent>
+        </Select>
+
         <Select value={filters.paymentStatus} onValueChange={(value) => updateFilter('paymentStatus', value as BillsFilterState['paymentStatus'])}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Payment status" />
@@ -76,6 +89,7 @@ export function BillsFilters({ filters, onChange, onReset }: BillsFiltersProps) 
             <SelectItem value="unpaid">Unpaid</SelectItem>
             <SelectItem value="overdue">Overdue</SelectItem>
             <SelectItem value="partial">Partial</SelectItem>
+            <SelectItem value="received">Received</SelectItem>
           </SelectContent>
         </Select>
 
